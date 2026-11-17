@@ -3,6 +3,7 @@ from decimal import Decimal
 import pytest
 
 from ai.models import ProductEmbedding
+from store import services
 from store.models import Order, Product
 
 pytestmark = pytest.mark.django_db
@@ -21,7 +22,8 @@ def test_catalog_is_public_and_filterable(anon_client, catalog):
     r = anon_client.get("/api/products/", {"in_stock": "true"})
     assert "flask" not in [p["slug"] for p in r.data["results"]]
     r = anon_client.get("/api/products/", {"q": "running shoes"})
-    assert r.data["results"][0]["slug"] == "stride-runner"
+    # Only real matches: a multi-word query must not return the rest of the catalog.
+    assert [p["slug"] for p in r.data["results"]] == ["stride-runner"]
 
 
 def test_only_staff_can_write_products(client_for, user, admin_user, catalog, django_capture_on_commit_callbacks):
@@ -87,6 +89,9 @@ def test_order_tracking_permissions_and_transitions(client_for, user, other_user
     r = admin.post(f"/api/orders/{order_id}/status/", {"status": "SHIPPED", "note": "Courier picked up"}, format="json")
     assert r.status_code == 200 and [e["status"] for e in r.data["events"]] == ["PENDING", "SHIPPED"]
     assert client.post(f"/api/orders/{order_id}/cancel/").status_code == 400  # shipped orders can't be cancelled
+    # Staff see every order by default, but only their own on the "My orders" page.
+    assert admin.get("/api/orders/").data["count"] == 1
+    assert admin.get("/api/orders/", {"scope": "mine"}).data["count"] == 0
 
 
 def test_cancel_restores_stock(client_for, user, catalog):
@@ -97,3 +102,34 @@ def test_cancel_restores_stock(client_for, user, catalog):
     r = client.post(f"/api/orders/{order_id}/cancel/")
     assert r.status_code == 200 and r.data["status"] == "CANCELLED"
     assert Product.objects.get(pk=catalog["shoes"].pk).stock == 2
+
+
+def test_admin_status_actions_follow_the_service_rules(client, make_user, catalog):
+    staff = make_user("ops", staff=True)
+    staff.is_superuser = True
+    staff.save()
+    buyer = make_user("buyer")
+    services.add_to_cart(buyer, catalog["shoes"].pk, 2)
+    order = services.checkout(buyer, services.ShippingDetails("B", "9876543210", "x", "Pune", "411001"))
+    client.force_login(staff)
+    r = client.post("/admin/store/order/", {"action": "cancel_orders", "_selected_action": [order.pk]})
+    assert r.status_code == 302
+    order.refresh_from_db()
+    assert order.status == "CANCELLED" and order.events.last().note == "Cancelled by staff"
+    assert Product.objects.get(pk=catalog["shoes"].pk).stock == 2  # restocked by the service
+    client.post("/admin/store/order/", {"action": "mark_shipped", "_selected_action": [order.pk]})
+    order.refresh_from_db()
+    assert order.status == "CANCELLED"  # invalid transition refused
+
+
+def test_seed_never_overwrites_existing_products(db, django_capture_on_commit_callbacks):
+    from django.core.management import call_command
+
+    with django_capture_on_commit_callbacks(execute=True):
+        call_command("seed_store", verbosity=0)
+    product = Product.objects.get(slug="aurora-anc-wireless-headphones")
+    Product.objects.filter(pk=product.pk).update(stock=3, description="Edited by the copywriter.")
+    with django_capture_on_commit_callbacks(execute=True):
+        call_command("seed_store", verbosity=0)
+    product.refresh_from_db()
+    assert (product.stock, product.description) == (3, "Edited by the copywriter.")

@@ -58,11 +58,14 @@ def test_search_api_parses_intent_and_explains_matches(anon_client, catalog):
     assert [p["slug"] for p in r.data["results"]] == ["boombox"]
     assert set(r.data["results"][0]["match"]) == {"score", "keyword_rank", "vector_rank", "similarity"}
     assert anon_client.get("/api/ai/search/", {"q": "x", "mode": "nope"}).status_code == 400
+    # A non-numeric limit falls back to the default instead of a 500.
+    assert anon_client.get("/api/ai/search/", {"q": "speaker", "limit": "abc"}).status_code == 200
 
 
 def test_similar_products_endpoint(anon_client, catalog):
     r = anon_client.get(f"/api/ai/products/{catalog['headphones'].pk}/similar/")
     assert r.status_code == 200 and len(r.data) == 3
+    assert anon_client.get(f"/api/ai/products/{catalog['headphones'].pk}/similar/", {"limit": "abc"}).status_code == 200
     assert catalog["headphones"].pk not in [p["id"] for p in r.data]
 
 

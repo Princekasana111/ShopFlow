@@ -13,7 +13,7 @@ FIXTURE = Path(__file__).resolve().parents[2] / "fixtures" / "catalog.json"
 
 
 class Command(BaseCommand):
-    help = "Load the demo catalog, reviews, users and sample orders. Safe to run repeatedly."
+    help = "Create the demo catalog, reviews, users and sample orders if missing. Never overwrites existing rows."
 
     @transaction.atomic
     def handle(self, *args, **options):
@@ -33,10 +33,12 @@ class Command(BaseCommand):
 
         categories = {}
         for c in data["categories"]:
-            categories[c["slug"]], _ = Category.objects.update_or_create(slug=c["slug"], defaults={"name": c["name"], "description": c["description"]})
+            categories[c["slug"]], _ = Category.objects.get_or_create(slug=c["slug"], defaults={"name": c["name"], "description": c["description"]})
 
         for p in data["products"]:
-            Product.objects.update_or_create(
+            # get_or_create, not update_or_create: the container runs this on every start, and it
+            # must never undo sold stock or edits made in the admin or the AI copywriter.
+            Product.objects.get_or_create(
                 slug=p["slug"],
                 defaults={
                     "name": p["name"],

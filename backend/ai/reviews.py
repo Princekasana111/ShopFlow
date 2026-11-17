@@ -1,7 +1,7 @@
 """AI review insights: summary, pros and cons from customer reviews (structured output).
 
 Summaries are cached per product and regenerated only when the set of visible reviews
-changes (fingerprint of review ids + ratings), so page views never trigger repeat LLM calls.
+changes (fingerprint of review ids, ratings and text), so page views never trigger repeat LLM calls.
 Flagged reviews (suspected prompt injection) are excluded from the prompt.
 """
 

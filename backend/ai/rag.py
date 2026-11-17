@@ -116,10 +116,10 @@ def retrieve(question: str, k: int = 4) -> list[RetrievedChunk]:
     )
     keyword_rows = []
     if (query := or_query(question)) is not None:
-        vector_expr = SearchVector("section", weight="A") + SearchVector("content", weight="B")
+        vector_expr = SearchVector("section", weight="A", config="english") + SearchVector("content", weight="B", config="english")
         keyword_rows = list(
-            KnowledgeChunk.objects.annotate(rank=SearchRank(vector_expr, query))
-            .filter(rank__gt=0)
+            KnowledgeChunk.objects.annotate(document=vector_expr, rank=SearchRank(vector_expr, query))
+            .filter(document=query)
             .order_by("-rank", "id")
             .values_list("id", flat=True)[:20]
         )

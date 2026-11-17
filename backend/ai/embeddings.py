@@ -1,7 +1,7 @@
 """Text embeddings.
 
 * `FastEmbedEmbedder` runs BAAI/bge-small-en-v1.5 (384-d) locally through ONNX Runtime.
-  Free, no API key, ~130 MB model download on first use (cached on disk).
+  Free, no API key, ~67 MB model download on first use (cached on disk).
 * `HashEmbedder` is a deterministic hashing-trick embedder (word unigrams + character
   trigrams). It needs no download, so the test suite and CI use it.
 """

@@ -130,7 +130,7 @@ You can run ShopFlow in two ways. **Docker** is the easiest: one command, nothin
 |---|---|---|
 | Software | [Docker Desktop](https://www.docker.com/products/docker-desktop/) (Windows, macOS) or Docker Engine + Compose v2 (Linux), running | Docker (for the database only), Python 3.12+, Node.js 20.19+ or 22.12+ |
 | Memory for Docker | 4 GB or more (the backend uses about 1.9 GB with its AI models loaded) | — |
-| Disk | About 3 GB for the images | About 1 GB (Python packages, Node packages, AI models) |
+| Disk | About 2 GB for the images (backend 1.1 GB, database 0.5 GB) | About 1 GB (Python packages, Node packages, AI models) |
 | Internet | On the first build only (downloads packages and the AI models) | On the first run only |
 | API key | Not needed. Optional `ANTHROPIC_API_KEY` to use Claude | Same |
 
@@ -243,7 +243,7 @@ The tests need the database running (`docker compose up -d db`) and the backend 
 
 ```bash
 cd backend
-pytest                                        # 85 tests, offline and deterministic (no API key or model downloads)
+pytest                                        # 87 tests, offline and deterministic (no API key or model downloads)
 python manage.py run_evals                    # all 7 suites
 python manage.py run_evals --suite search     # one suite: search | parse | rag | agent | planner | product_qa | visual
 python manage.py run_evals --suite search --fail-under search:hybrid.recall@5=0.95   # exit code 1 if below

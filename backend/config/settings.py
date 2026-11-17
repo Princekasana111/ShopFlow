@@ -194,7 +194,8 @@ AI = {
     "CLIP_DIM": 512,
     "MAX_UPLOAD_BYTES": 5 * 1024 * 1024,
     # Below this CLIP photo-to-text similarity the match is flagged as uncertain. On 11 test
-    # photos, non-product photos scored 0.20-0.24 and most products 0.26-0.36.
+    # photos (8 labelled product photos + 3 non-product photos), non-product photos scored 0.20-0.24
+    # and most products 0.26-0.36.
     "CLIP_LOW_CONFIDENCE": 0.25,
     # AI Shopping Planner relevance gate (bge-small scale): a product can cover a need only if it is
     # within MARGIN of the best match and above MIN_SIMILARITY.

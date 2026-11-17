@@ -80,7 +80,7 @@ export default function Orders() {
   const [params] = useSearchParams();
   const placed = params.get("placed");
 
-  useEffect(() => { api("/api/orders/").then((r) => setOrders(r.results)).catch(() => setOrders([])); }, []);
+  useEffect(() => { api("/api/orders/", { query: { scope: "mine" } }).then((r) => setOrders(r.results)).catch(() => setOrders([])); }, []);
   const replace = (updated) => setOrders((list) => list.map((o) => (o.id === updated.id ? updated : o)));
 
   if (!orders) return <div className="skeleton" style={{ height: 300 }} />;

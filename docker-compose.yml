@@ -24,7 +24,7 @@ services:
       DB_HOST: db
       DB_PORT: "5432"
       DJANGO_DEBUG: ${DJANGO_DEBUG:-0}
-      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-change-me-in-production-please}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-dev-only-insecure-secret-key-change-me-in-production}
       DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,backend
       LLM_PROVIDER: ${LLM_PROVIDER:-auto}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}

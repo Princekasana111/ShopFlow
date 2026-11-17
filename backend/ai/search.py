@@ -95,9 +95,11 @@ def keyword_search(text: str, filters: SearchFilters, k: int = CANDIDATES_PER_RE
     if query is None:
         return []
     qs = filters.apply(Product.objects.filter(is_active=True))
+    vector = _product_search_vector()
     rows = (
-        qs.annotate(rank=SearchRank(_product_search_vector(), query))
-        .filter(rank__gt=0)
+        # Match with `@@` (document=query); ts_rank alone is not a match test (see store/views.py).
+        qs.annotate(document=vector, rank=SearchRank(vector, query))
+        .filter(document=query)
         .order_by("-rank", "id")
         .values_list("id", "rank")[:k]
     )

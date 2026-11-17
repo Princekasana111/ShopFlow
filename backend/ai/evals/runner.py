@@ -1,12 +1,15 @@
 """Offline evaluation suites. Run with `python manage.py run_evals --suite <name>`.
 
-search  Retrieval quality of keyword vs vector vs hybrid search on a labelled query set
-        (Recall@5, MRR@10, nDCG@10, Hit@1) plus per-query-type breakdown and latency.
-parse   Query understanding: per-field accuracy of the extracted filters.
-rag     Help-center RAG: retrieval hit rate, answerable/unanswerable detection, key-fact
-        recall in the answer, citation validity; plus an LLM-as-judge score in live mode.
-agent   Shopping assistant: tool-selection accuracy, forbidden-tool violations, cart
-        outcome checks, guardrail blocking and price-grounding violations.
+search      Retrieval quality of keyword vs vector vs hybrid search on a labelled query set
+            (Recall@5, MRR@10, nDCG@10, Hit@1) plus per-query-type breakdown and latency.
+parse       Query understanding: per-field accuracy of the extracted filters.
+rag         Help-center RAG: retrieval hit rate, answerable/unanswerable detection, key-fact
+            recall in the answer, citation validity; plus an LLM-as-judge score in live mode.
+agent       Shopping assistant: tool-selection accuracy, forbidden-tool violations, cart
+            outcome checks, guardrail blocking and price-grounding violations.
+planner     AI Shopping Planner: budget respected, expected items chosen, must-have coverage.
+product_qa  Ask this product: answered-vs-declined accuracy and whether the right evidence is cited.
+visual      Snap & Search: Hit@1 and Hit@3 on labelled photos (downloaded from Wikimedia Commons by URL).
 
 The datasets in ai/evals/datasets/ are small and hand-labelled by the project author; treat
 the numbers as regression signals for this demo catalog, not as general benchmarks.

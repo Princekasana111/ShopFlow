@@ -83,7 +83,10 @@ class ProductViewSet(viewsets.ModelViewSet):
         if q := params.get("q", "").strip():
             vector = SearchVector("name", weight="A") + SearchVector("brand", weight="A") + SearchVector("description", weight="C")
             query = SearchQuery(q, search_type="websearch")
-            qs = qs.annotate(rank=SearchRank(vector, query)).filter(rank__gt=0)
+            # Filter on the match itself (SQL `@@`). PostgreSQL's ts_rank returns a tiny non-zero
+            # rank (1e-20) for rows that don't match a multi-word query, so `rank > 0` let the
+            # whole catalog through for queries like "rain jacket".
+            qs = qs.annotate(document=vector, rank=SearchRank(vector, query)).filter(document=query)
             if not ordering:
                 return qs.order_by("-rank", "id")
 
@@ -170,14 +173,15 @@ class CartItemView(APIView):
 
 
 class OrderViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
-    """Customers see their own orders; staff see every order."""
+    """Customers see their own orders. Staff see every order, unless they pass `?scope=mine`
+    (used by the customer-facing "My orders" page)."""
 
     serializer_class = OrderSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         qs = Order.objects.select_related("user").prefetch_related("items__product__category", "events")
-        if self.request.user.is_staff:
+        if self.request.user.is_staff and self.request.query_params.get("scope") != "mine":
             if status_filter := self.request.query_params.get("status"):
                 qs = qs.filter(status=status_filter)
             return qs

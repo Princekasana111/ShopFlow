@@ -2,7 +2,8 @@
 set -e
 
 python manage.py migrate --noinput
-# Seeds demo data and builds the vector indexes; safe to run on every start.
+# Creates any missing demo data (never overwrites existing rows) and embeds new or changed
+# products; safe to run on every start.
 python manage.py bootstrap
 
 # gthread workers: each streaming (SSE) chat response holds a thread, not a whole worker.

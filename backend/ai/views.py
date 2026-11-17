@@ -47,6 +47,15 @@ class StatusView(APIView):
         )
 
 
+def _int_param(params, name, default, low, high):
+    """Parse an integer query parameter; missing or invalid values fall back to the default."""
+    try:
+        value = int(params.get(name, default))
+    except (TypeError, ValueError):
+        value = default
+    return max(low, min(value, high))
+
+
 def _decimal(value, name):
     if value in (None, ""):
         return None
@@ -75,7 +84,7 @@ class SearchView(APIView):
         mode = params.get("mode", "hybrid")
         if mode not in MODES:
             return Response({"detail": f"mode must be one of {', '.join(MODES)}"}, status=status.HTTP_400_BAD_REQUEST)
-        limit = max(1, min(int(params.get("limit", 12) or 12), 30))
+        limit = _int_param(params, "limit", 12, 1, 30)
         use_parser = params.get("parse", "true").lower() not in ("0", "false", "no") and bool(query)
 
         intent, parser_meta, semantic_query = None, None, query
@@ -122,7 +131,7 @@ class SimilarProductsView(APIView):
     def get(self, request, product_id):
         product = get_object_or_404(Product.objects.select_related("embedding_record"), pk=product_id, is_active=True)
         rows = []
-        for p, sim in similar_products(product, limit=int(request.query_params.get("limit", 4))):
+        for p, sim in similar_products(product, limit=_int_param(request.query_params, "limit", 4, 1, 12)):
             row = ProductListSerializer(p).data
             row["similarity"] = sim
             rows.append(row)
@@ -277,7 +286,7 @@ class MetricsView(APIView):
     permission_classes = [permissions.IsAdminUser]
 
     def get(self, request):
-        days = max(1, min(int(request.query_params.get("days", 7) or 7), 90))
+        days = _int_param(request.query_params, "days", 7, 1, 90)
         return Response(dashboard_metrics(days))
 
 

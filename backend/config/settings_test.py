@@ -13,7 +13,7 @@ AI.update(
     }
 )
 
-# Throttling is tested explicitly; keep it out of the way elsewhere.
+# Throttle rates are raised so no test hits a 429 by accident.
 REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
     "auth": "1000/min",
     "ai_chat": "1000/min",
