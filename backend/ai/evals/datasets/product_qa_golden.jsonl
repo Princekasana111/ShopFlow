@@ -1,0 +1,18 @@
+{"product": "aurora-anc-wireless-headphones", "question": "How long does the battery last?", "evidence": "30 hours", "answerable": true}
+{"product": "aurora-anc-wireless-headphones", "question": "Is the microphone good for calls?", "evidence": "microphone", "answerable": true}
+{"product": "aurora-anc-wireless-headphones", "question": "Is it comfortable for long flights?", "evidence": "comfortable", "answerable": true}
+{"product": "aurora-anc-wireless-headphones", "question": "Is it waterproof?", "evidence": null, "answerable": false}
+{"product": "aurora-anc-wireless-headphones", "question": "What colours does it come in?", "evidence": null, "answerable": false}
+{"product": "boombox-mini-bluetooth-speaker", "question": "Can I take it to the pool?", "evidence": "pool", "answerable": true}
+{"product": "boombox-mini-bluetooth-speaker", "question": "Does the bass distort at high volume?", "evidence": "distort", "answerable": true}
+{"product": "stride-runner-road-running-shoes", "question": "Do these run small?", "evidence": "small", "answerable": true}
+{"product": "stride-runner-road-running-shoes", "question": "How durable is the sole?", "evidence": "400 km", "answerable": true}
+{"product": "thermosteel-insulated-flask-1l", "question": "How long does it keep tea hot?", "evidence": "hot", "answerable": true}
+{"product": "thermosteel-insulated-flask-1l", "question": "Is it dishwasher safe?", "evidence": null, "answerable": false}
+{"product": "crispair-air-fryer-4l", "question": "Is it big enough for a big family?", "evidence": "family", "answerable": true}
+{"product": "crispair-air-fryer-4l", "question": "Is it noisy?", "evidence": "noisy", "answerable": true}
+{"product": "windproof-puffer-jacket", "question": "Is it warm enough for Manali?", "evidence": "Manali", "answerable": true}
+{"product": "grippro-anti-slip-yoga-mat", "question": "Does it smell when new?", "evidence": "smell", "answerable": true}
+{"product": "lumen-24-inch-ips-monitor", "question": "Does it have an HDMI port?", "evidence": "HDMI", "answerable": true}
+{"product": "the-python-pathway", "question": "Do I need prior coding experience?", "evidence": "no prior coding experience", "answerable": true}
+{"product": "the-python-pathway", "question": "Is there a Hindi edition?", "evidence": null, "answerable": false}

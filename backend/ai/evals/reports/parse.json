@@ -1,0 +1,68 @@
+{
+  "suite": "parse",
+  "config": {
+    "llm_provider": "offline",
+    "llm_model": "rule-based-v1",
+    "embedding_model": "BAAI/bge-small-en-v1.5",
+    "query_prefix": "",
+    "queries": 24
+  },
+  "metrics": {
+    "heuristic": {
+      "category_slug": 0.875,
+      "min_price": 1.0,
+      "max_price": 1.0,
+      "in_stock_only": 1.0,
+      "exact": 0.875
+    }
+  },
+  "misses": {
+    "heuristic": [
+      {
+        "query": "warm clothes for winter",
+        "expected": {
+          "category_slug": "clothing",
+          "min_price": null,
+          "max_price": null,
+          "in_stock_only": false
+        },
+        "got": {
+          "category_slug": null,
+          "min_price": null,
+          "max_price": null,
+          "in_stock_only": false
+        }
+      },
+      {
+        "query": "something to keep tea hot on a train journey",
+        "expected": {
+          "category_slug": "home-kitchen",
+          "min_price": null,
+          "max_price": null,
+          "in_stock_only": false
+        },
+        "got": {
+          "category_slug": null,
+          "min_price": null,
+          "max_price": null,
+          "in_stock_only": false
+        }
+      },
+      {
+        "query": "present for a 7 year old who likes space, max 600",
+        "expected": {
+          "category_slug": "books",
+          "min_price": null,
+          "max_price": 600,
+          "in_stock_only": false
+        },
+        "got": {
+          "category_slug": null,
+          "min_price": null,
+          "max_price": 600.0,
+          "in_stock_only": false
+        }
+      }
+    ]
+  }
+}

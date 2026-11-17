@@ -1,0 +1,71 @@
+[
+ {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/09/GandM_Flare_DXM_bat-Purist_156g_ball.jpg/500px-GandM_Flare_DXM_bat-Purist_156g_ball.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "source_page": "https://commons.wikimedia.org/wiki/File:GandM_Flare_DXM_bat-Purist_156g_ball.jpg",
+  "expected": [
+   "english-willow-cricket-bat",
+   "kashmir-willow-tennis-ball-bat"
+  ],
+  "shows": "cricket bat and ball"
+ },
+ {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/55/2023_Czajnik_elektryczny_N%27OVEEN.jpg/500px-2023_Czajnik_elektryczny_N%27OVEEN.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "source_page": "https://commons.wikimedia.org/wiki/File:2023_Czajnik_elektryczny_N%27OVEEN.jpg",
+  "expected": [
+   "quickboil-electric-kettle"
+  ],
+  "shows": "white electric kettle"
+ },
+ {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/21/Jakarta_old_football.jpg/500px-Jakarta_old_football.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "source_page": "https://commons.wikimedia.org/wiki/File:Jakarta_old_football.jpg",
+  "expected": [
+   "prokick-football-size-5"
+  ],
+  "shows": "child holding a worn football"
+ },
+ {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0a/Bose_QuietComfort_25_Acoustic_Noise_Cancelling_Headphones_with_Carry_Case.jpg/500px-Bose_QuietComfort_25_Acoustic_Noise_Cancelling_Headphones_with_Carry_Case.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "source_page": "https://commons.wikimedia.org/wiki/File:Bose_QuietComfort_25_Acoustic_Noise_Cancelling_Headphones_with_Carry_Case.jpg",
+  "expected": [
+   "aurora-anc-wireless-headphones",
+   "pulse-true-wireless-earbuds"
+  ],
+  "shows": "over-ear headphones"
+ },
+ {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b8/Mizuno_Wave_Ibuki_2.jpg/500px-Mizuno_Wave_Ibuki_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "source_page": "https://commons.wikimedia.org/wiki/File:Mizuno_Wave_Ibuki_2.jpg",
+  "expected": [
+   "stride-runner-road-running-shoes",
+   "stride-aqua-waterproof-running-shoes",
+   "cloudwalk-everyday-sneakers",
+   "courtpro-badminton-shoes"
+  ],
+  "shows": "trail running shoe"
+ },
+ {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f3/Yoga_Mat_Made_of_Carpet_Underlay.jpg/500px-Yoga_Mat_Made_of_Carpet_Underlay.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "source_page": "https://commons.wikimedia.org/wiki/File:Yoga_Mat_Made_of_Carpet_Underlay.jpg",
+  "expected": [
+   "grippro-anti-slip-yoga-mat"
+  ],
+  "shows": "rolled textured mat"
+ },
+ {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3a/The_Umbrella_Workshop.jpg/500px-The_Umbrella_Workshop.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "source_page": "https://commons.wikimedia.org/wiki/File:The_Umbrella_Workshop.jpg",
+  "expected": [
+   "packable-rain-jacket"
+  ],
+  "shows": "paper umbrellas being made; the catalog sells no umbrellas, nearest is rain gear"
+ },
+ {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7d/M27-Dumbbell_Nebula-29-07-2026.jpg/500px-M27-Dumbbell_Nebula-29-07-2026.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "source_page": "https://commons.wikimedia.org/wiki/File:M27-Dumbbell_Nebula-29-07-2026.jpg",
+  "expected": [
+   "little-explorers-space-atlas"
+  ],
+  "shows": "the Dumbbell Nebula (a space photo), not a dumbbell"
+ }
+]

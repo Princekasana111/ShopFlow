@@ -1,0 +1,20 @@
+{"question": "How long do refunds take for prepaid orders?", "expected_doc": "returns", "expected_section": "Refund timelines", "answerable": true, "must_include_any": [["5-7 working days", "5-7 days", "5 to 7"]]}
+{"question": "I paid cash on delivery. How will I get my refund?", "expected_doc": "returns", "expected_section": "Refund timelines", "answerable": true, "must_include_any": [["NEFT", "bank transfer"]]}
+{"question": "Can I return socks?", "expected_doc": "returns", "expected_section": "Items that cannot be returned", "answerable": true, "must_include_any": [["socks"]]}
+{"question": "What is the return window for electronics?", "expected_doc": "returns", "expected_section": "Return window", "answerable": true, "must_include_any": [["7-day", "7 days", "seven"]]}
+{"question": "Is shipping free?", "expected_doc": "shipping", "expected_section": "Shipping charges", "answerable": true, "must_include_any": [["999"]]}
+{"question": "How much does express delivery cost?", "expected_doc": "shipping", "expected_section": "Shipping charges", "answerable": true, "must_include_any": [["149"]]}
+{"question": "How long does delivery take to Bengaluru?", "expected_doc": "shipping", "expected_section": "Delivery timelines", "answerable": true, "must_include_any": [["2-4 working days", "2-4 days", "2 to 4"]]}
+{"question": "Do you ship to the USA?", "expected_doc": "shipping", "expected_section": "Delivery areas", "answerable": true, "must_include_any": [["outside India", "only within India", "only in India", "within India"]]}
+{"question": "What happens if the courier can't deliver my package?", "expected_doc": "shipping", "expected_section": "Failed delivery attempts", "answerable": true, "must_include_any": [["three", "3"]]}
+{"question": "Is cash on delivery available for a ₹15,000 order?", "expected_doc": "payments", "expected_section": "Cash on Delivery", "answerable": true, "must_include_any": [["10,000", "10000"]]}
+{"question": "Is there a fee for COD?", "expected_doc": "payments", "expected_section": "Cash on Delivery", "answerable": true, "must_include_any": [["40"]]}
+{"question": "Money was debited but my order failed. What now?", "expected_doc": "payments", "expected_section": "Failed payments", "answerable": true, "must_include_any": [["5-7 working days", "5-7 days", "5 to 7"]]}
+{"question": "Can I add my GSTIN after placing the order?", "expected_doc": "payments", "expected_section": "Invoices and GST", "answerable": true, "must_include_any": [["cannot", "can't", "not possible", "before placing"]]}
+{"question": "How do I claim warranty on my headphones?", "expected_doc": "warranty", "expected_section": "How to claim warranty", "answerable": true, "must_include_any": [["service centre", "service center"]]}
+{"question": "Does warranty cover water damage?", "expected_doc": "warranty", "expected_section": "What warranty does not cover", "answerable": true, "must_include_any": [["not covered", "does not cover", "doesn't cover", "isn't covered", "not cover"]]}
+{"question": "How can I contact customer support?", "expected_doc": "account-and-support", "expected_section": "Contacting support", "answerable": true, "must_include_any": [["1800-000-0000", "support@shopflow.example"]]}
+{"question": "Can I cancel an order after it has shipped?", "expected_doc": "returns", "expected_section": "Cancelling an order", "answerable": true, "must_include_any": [["cannot", "can't", "refuse", "not possible"]]}
+{"question": "Do you have a physical store in Mumbai?", "expected_doc": null, "expected_section": null, "answerable": false, "must_include_any": []}
+{"question": "What is the capital of France?", "expected_doc": null, "expected_section": null, "answerable": false, "must_include_any": []}
+{"question": "Do you offer gift wrapping?", "expected_doc": null, "expected_section": null, "answerable": false, "must_include_any": []}

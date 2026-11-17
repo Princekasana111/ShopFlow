@@ -1,0 +1,215 @@
+{
+  "suite": "planner",
+  "config": {
+    "llm_provider": "offline",
+    "llm_model": "rule-based-v1",
+    "embedding_model": "BAAI/bge-small-en-v1.5",
+    "query_prefix": "",
+    "goals": 12
+  },
+  "metrics": {
+    "budget_respected": 1.0,
+    "expected_item_recall": 1.0,
+    "must_have_coverage": 0.9444
+  },
+  "details": [
+    {
+      "goal": "Monsoon trek in Himachal, budget ₹8,000",
+      "budget": "8000.00",
+      "total": "7697.00",
+      "chosen": [
+        "merino-wool-socks-pack-of-3",
+        "thermosteel-insulated-flask-1l",
+        "trailblazer-waterproof-hiking-boots"
+      ],
+      "skipped": [
+        "Rain jacket",
+        "Power bank",
+        "Rain-ready footwear"
+      ],
+      "planner": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "goal": "I want to start running",
+      "budget": "5000.00",
+      "total": "4897.00",
+      "chosen": [
+        "drymax-sports-t-shirt",
+        "recovery-foam-roller",
+        "stride-runner-road-running-shoes"
+      ],
+      "skipped": [
+        "Fitness tracker"
+      ],
+      "planner": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "goal": "Home office setup under 20k",
+      "budget": "20000.00",
+      "total": "19795.00",
+      "chosen": [
+        "clearview-1080p-webcam",
+        "focus-led-desk-lamp",
+        "glide-silent-wireless-mouse",
+        "keyclick-mechanical-keyboard",
+        "lumen-24-inch-ips-monitor"
+      ],
+      "skipped": [],
+      "planner": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "goal": "Gift for my 7 year old nephew who loves space, max 1500",
+      "budget": "1500.00",
+      "total": "499.00",
+      "chosen": [
+        "little-explorers-space-atlas"
+      ],
+      "skipped": [
+        "Fun shoes"
+      ],
+      "planner": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "goal": "I just moved into a new flat and want to start cooking, under 4000",
+      "budget": "4000.00",
+      "total": "3997.00",
+      "chosen": [
+        "ceramic-non-stick-frying-pan",
+        "home-cooking-100-indian-classics",
+        "prochef-8-inch-chef-knife"
+      ],
+      "skipped": [
+        "Cutting board",
+        "Kettle"
+      ],
+      "planner": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "goal": "Setting up a home gym, budget 6000",
+      "budget": "6000.00",
+      "total": "5696.00",
+      "chosen": [
+        "adjustable-dumbbell-set-20kg",
+        "grippro-anti-slip-yoga-mat",
+        "resistance-bands-set",
+        "speed-skipping-rope"
+      ],
+      "skipped": [],
+      "planner": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "goal": "Getting into yoga as a beginner",
+      "budget": null,
+      "total": "2497.00",
+      "chosen": [
+        "grippro-anti-slip-yoga-mat",
+        "the-calm-mind",
+        "yogaflex-high-waist-leggings"
+      ],
+      "skipped": [],
+      "planner": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "goal": "Learning to code in Python",
+      "budget": null,
+      "total": "5647.00",
+      "chosen": [
+        "competitive-coding-handbook",
+        "keyclick-mechanical-keyboard",
+        "the-python-pathway"
+      ],
+      "skipped": [],
+      "planner": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "goal": "Goa beach holiday, under 3000",
+      "budget": "3000.00",
+      "total": "2248.00",
+      "chosen": [
+        "hydro-steel-water-bottle-750ml",
+        "volt-20000mah-power-bank"
+      ],
+      "skipped": [
+        "Headphones",
+        "Sandals"
+      ],
+      "planner": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "goal": "Something to wear for Diwali",
+      "budget": null,
+      "total": "5298.00",
+      "chosen": [
+        "classic-leather-oxford-shoes",
+        "festive-cotton-kurta"
+      ],
+      "skipped": [],
+      "planner": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "goal": "Winter trip to Manali in December",
+      "budget": null,
+      "total": "17244.00",
+      "chosen": [
+        "aurora-anc-wireless-headphones",
+        "comfortflex-sandals",
+        "fleece-zip-hoodie",
+        "hydro-steel-water-bottle-750ml",
+        "volt-20000mah-power-bank",
+        "windproof-puffer-jacket"
+      ],
+      "skipped": [],
+      "planner": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "goal": "Badminton gear for my daughter under 6000",
+      "budget": "6000.00",
+      "total": "5797.00",
+      "chosen": [
+        "courtpro-badminton-shoes",
+        "feather-carbon-badminton-racket",
+        "little-explorers-space-atlas"
+      ],
+      "skipped": [
+        "Fun shoes"
+      ],
+      "planner": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    }
+  ]
+}

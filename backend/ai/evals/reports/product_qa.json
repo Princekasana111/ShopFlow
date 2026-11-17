@@ -1,0 +1,179 @@
+{
+  "suite": "product_qa",
+  "config": {
+    "llm_provider": "offline",
+    "llm_model": "rule-based-v1",
+    "embedding_model": "BAAI/bge-small-en-v1.5",
+    "query_prefix": "",
+    "questions": 18,
+    "min_similarity": 0.62
+  },
+  "metrics": {
+    "answerable_correct": 0.9444,
+    "evidence_cited": 1.0
+  },
+  "details": [
+    {
+      "product": "aurora-anc-wireless-headphones",
+      "question": "How long does the battery last?",
+      "answerable": true,
+      "answer": "The specs list battery: 30 hours. [1] A 5★ reviewer says: \"Noise cancellation is excellent on flights; I barely hear the engine. Battery easily lasts a week of commuting.\" [2]",
+      "citations": [
+        "Spec · battery",
+        "Review · 5★ by priya"
+      ]
+    },
+    {
+      "product": "aurora-anc-wireless-headphones",
+      "question": "Is the microphone good for calls?",
+      "answerable": true,
+      "answer": "A 3★ reviewer says: \"Good noise cancellation but the microphone is average for calls in noisy places.\" [1]",
+      "citations": [
+        "Review · 3★ by ananya"
+      ]
+    },
+    {
+      "product": "aurora-anc-wireless-headphones",
+      "question": "Is it comfortable for long flights?",
+      "answerable": true,
+      "answer": "A 4★ reviewer says: \"Very comfortable for long hours and the sound is rich. Slightly bulky to carry and the case is big.\" [1] A 5★ reviewer says: \"Noise cancellation is excellent on flights; I barely hear the engine. Battery easily lasts a week of commuting.\" [2]",
+      "citations": [
+        "Review · 4★ by rahul",
+        "Review · 5★ by priya"
+      ]
+    },
+    {
+      "product": "aurora-anc-wireless-headphones",
+      "question": "Is it waterproof?",
+      "answerable": false,
+      "answer": "The product details and reviews don't mention that. Try asking the assistant or our help center.",
+      "citations": []
+    },
+    {
+      "product": "aurora-anc-wireless-headphones",
+      "question": "What colours does it come in?",
+      "answerable": false,
+      "answer": "The product details and reviews don't mention that. Try asking the assistant or our help center.",
+      "citations": []
+    },
+    {
+      "product": "boombox-mini-bluetooth-speaker",
+      "question": "Can I take it to the pool?",
+      "answerable": true,
+      "answer": "A 5★ reviewer says: \"Took it to Goa and it survived the pool and the sand. Loud for its size.\" [1]",
+      "citations": [
+        "Review · 5★ by vikram"
+      ]
+    },
+    {
+      "product": "boombox-mini-bluetooth-speaker",
+      "question": "Does the bass distort at high volume?",
+      "answerable": true,
+      "answer": "A 4★ reviewer says: \"Battery lasts a full day trip. Bass is good but distorts at maximum volume.\" [1]",
+      "citations": [
+        "Review · 4★ by ananya"
+      ]
+    },
+    {
+      "product": "stride-runner-road-running-shoes",
+      "question": "Do these run small?",
+      "answerable": true,
+      "answer": "A 4★ reviewer says: \"Comfortable, but they run half a size small, so order one size up.\" [1] A 5★ reviewer says: \"Super light and cushioned. I ran my first half marathon in these.\" [2]",
+      "citations": [
+        "Review · 4★ by sneha",
+        "Review · 5★ by rahul"
+      ]
+    },
+    {
+      "product": "stride-runner-road-running-shoes",
+      "question": "How durable is the sole?",
+      "answerable": true,
+      "answer": "A 3★ reviewer says: \"Good cushioning, but the sole wore out after about 400 km.\" [1]",
+      "citations": [
+        "Review · 3★ by vikram"
+      ]
+    },
+    {
+      "product": "thermosteel-insulated-flask-1l",
+      "question": "How long does it keep tea hot?",
+      "answerable": true,
+      "answer": "A 5★ reviewer says: \"Tea stays hot from morning till evening on train journeys.\" [1] Double-wall vacuum insulated stainless-steel flask that keeps tea or coffee hot for 24 hours and water cold for 36 hours. [2]",
+      "citations": [
+        "Review · 5★ by priya",
+        "Description"
+      ]
+    },
+    {
+      "product": "thermosteel-insulated-flask-1l",
+      "question": "Is it dishwasher safe?",
+      "answerable": false,
+      "answer": "The product details and reviews don't mention that. Try asking the assistant or our help center.",
+      "citations": []
+    },
+    {
+      "product": "crispair-air-fryer-4l",
+      "question": "Is it big enough for a big family?",
+      "answerable": true,
+      "answer": "A 3★ reviewer says: \"Works well, but 4 litres is small for a family of five.\" [1]",
+      "citations": [
+        "Review · 3★ by priya"
+      ]
+    },
+    {
+      "product": "crispair-air-fryer-4l",
+      "question": "Is it noisy?",
+      "answerable": true,
+      "answer": "A 4★ reviewer says: \"The presets are handy. It is a bit noisy.\" [1]",
+      "citations": [
+        "Review · 4★ by sneha"
+      ]
+    },
+    {
+      "product": "windproof-puffer-jacket",
+      "question": "Is it warm enough for Manali?",
+      "answerable": true,
+      "answer": "A 5★ reviewer says: \"Kept me warm in Manali at minus 2 degrees. Packs small.\" [1] Warm quilted puffer jacket with synthetic insulation and a windproof shell for cold winters in Delhi, Manali or Shimla. [2]",
+      "citations": [
+        "Review · 5★ by rahul",
+        "Description"
+      ]
+    },
+    {
+      "product": "grippro-anti-slip-yoga-mat",
+      "question": "Does it smell when new?",
+      "answerable": true,
+      "answer": "A 4★ reviewer says: \"Nice grip, but it had a rubbery smell for the first few days.\" [1]",
+      "citations": [
+        "Review · 4★ by ananya"
+      ]
+    },
+    {
+      "product": "lumen-24-inch-ips-monitor",
+      "question": "Does it have an HDMI port?",
+      "answerable": true,
+      "answer": "The specs list inputs: HDMI, VGA. [1]",
+      "citations": [
+        "Spec · inputs"
+      ]
+    },
+    {
+      "product": "the-python-pathway",
+      "question": "Do I need prior coding experience?",
+      "answerable": true,
+      "answer": "Includes exercises with solutions; no prior coding experience needed. [1] A friendly introduction to programming with Python, from variables and loops to building small projects. [2]",
+      "citations": [
+        "Description",
+        "Description"
+      ]
+    },
+    {
+      "product": "the-python-pathway",
+      "question": "Is there a Hindi edition?",
+      "answerable": true,
+      "answer": "The specs list format: paperback. [1]",
+      "citations": [
+        "Spec · format"
+      ]
+    }
+  ]
+}

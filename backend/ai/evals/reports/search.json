@@ -1,0 +1,118 @@
+{
+  "suite": "search",
+  "config": {
+    "llm_provider": "offline",
+    "llm_model": "rule-based-v1",
+    "embedding_model": "BAAI/bge-small-en-v1.5",
+    "query_prefix": "",
+    "queries": 46,
+    "rrf_k": 60
+  },
+  "metrics": {
+    "keyword": {
+      "recall@5": 0.9565,
+      "mrr@10": 0.779,
+      "ndcg@10": 0.8119,
+      "hit@1": 0.6087,
+      "p50_latency_ms": 4.5
+    },
+    "vector": {
+      "recall@5": 0.9891,
+      "mrr@10": 0.9717,
+      "ndcg@10": 0.975,
+      "hit@1": 0.9565,
+      "p50_latency_ms": 5.4
+    },
+    "hybrid": {
+      "recall@5": 1.0,
+      "mrr@10": 0.9717,
+      "ndcg@10": 0.9742,
+      "hit@1": 0.9565,
+      "p50_latency_ms": 6.2
+    }
+  },
+  "by_type": {
+    "keyword": {
+      "intent": {
+        "n": 8,
+        "recall@5": 0.9375,
+        "mrr@10": 0.9375
+      },
+      "keyword": {
+        "n": 11,
+        "recall@5": 0.9545,
+        "mrr@10": 0.9545
+      },
+      "paraphrase": {
+        "n": 22,
+        "recall@5": 1.0,
+        "mrr@10": 0.6591
+      },
+      "spec": {
+        "n": 2,
+        "recall@5": 1.0,
+        "mrr@10": 0.6667
+      },
+      "typo": {
+        "n": 3,
+        "recall@5": 0.6667,
+        "mrr@10": 0.6667
+      }
+    },
+    "vector": {
+      "intent": {
+        "n": 8,
+        "recall@5": 0.9375,
+        "mrr@10": 1.0
+      },
+      "keyword": {
+        "n": 11,
+        "recall@5": 1.0,
+        "mrr@10": 1.0
+      },
+      "paraphrase": {
+        "n": 22,
+        "recall@5": 1.0,
+        "mrr@10": 0.9773
+      },
+      "spec": {
+        "n": 2,
+        "recall@5": 1.0,
+        "mrr@10": 1.0
+      },
+      "typo": {
+        "n": 3,
+        "recall@5": 1.0,
+        "mrr@10": 0.7333
+      }
+    },
+    "hybrid": {
+      "intent": {
+        "n": 8,
+        "recall@5": 1.0,
+        "mrr@10": 1.0
+      },
+      "keyword": {
+        "n": 11,
+        "recall@5": 1.0,
+        "mrr@10": 1.0
+      },
+      "paraphrase": {
+        "n": 22,
+        "recall@5": 1.0,
+        "mrr@10": 0.9773
+      },
+      "spec": {
+        "n": 2,
+        "recall@5": 1.0,
+        "mrr@10": 1.0
+      },
+      "typo": {
+        "n": 3,
+        "recall@5": 1.0,
+        "mrr@10": 0.7333
+      }
+    }
+  },
+  "hybrid_misses": []
+}

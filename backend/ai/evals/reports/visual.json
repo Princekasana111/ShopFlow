@@ -1,0 +1,106 @@
+{
+  "suite": "visual",
+  "config": {
+    "llm_provider": "offline",
+    "llm_model": "rule-based-v1",
+    "embedding_model": "BAAI/bge-small-en-v1.5",
+    "query_prefix": "",
+    "photos": 8,
+    "clip": "Qdrant/clip-ViT-B-32-vision",
+    "method": "clip"
+  },
+  "metrics": {
+    "hit@1": 0.875,
+    "hit@3": 0.875
+  },
+  "details": [
+    {
+      "photo": "https://commons.wikimedia.org/wiki/File:GandM_Flare_DXM_bat-Purist_156g_ball.jpg",
+      "shows": "cricket bat and ball",
+      "method": "clip",
+      "low_confidence": false,
+      "top3": [
+        "english-willow-cricket-bat",
+        "kashmir-willow-tennis-ball-bat",
+        "prokick-football-size-5"
+      ]
+    },
+    {
+      "photo": "https://commons.wikimedia.org/wiki/File:2023_Czajnik_elektryczny_N%27OVEEN.jpg",
+      "shows": "white electric kettle",
+      "method": "clip",
+      "low_confidence": false,
+      "top3": [
+        "quickboil-electric-kettle",
+        "crispair-air-fryer-4l",
+        "thermosteel-insulated-flask-1l"
+      ]
+    },
+    {
+      "photo": "https://commons.wikimedia.org/wiki/File:Jakarta_old_football.jpg",
+      "shows": "child holding a worn football",
+      "method": "clip",
+      "low_confidence": false,
+      "top3": [
+        "prokick-football-size-5",
+        "kashmir-willow-tennis-ball-bat",
+        "the-monsoon-letters"
+      ]
+    },
+    {
+      "photo": "https://commons.wikimedia.org/wiki/File:Bose_QuietComfort_25_Acoustic_Noise_Cancelling_Headphones_with_Carry_Case.jpg",
+      "shows": "over-ear headphones",
+      "method": "clip",
+      "low_confidence": false,
+      "top3": [
+        "aurora-anc-wireless-headphones",
+        "glide-silent-wireless-mouse",
+        "clearview-1080p-webcam"
+      ]
+    },
+    {
+      "photo": "https://commons.wikimedia.org/wiki/File:Mizuno_Wave_Ibuki_2.jpg",
+      "shows": "trail running shoe",
+      "method": "clip",
+      "low_confidence": false,
+      "top3": [
+        "stride-aqua-waterproof-running-shoes",
+        "stride-runner-road-running-shoes",
+        "courtpro-badminton-shoes"
+      ]
+    },
+    {
+      "photo": "https://commons.wikimedia.org/wiki/File:Yoga_Mat_Made_of_Carpet_Underlay.jpg",
+      "shows": "rolled textured mat",
+      "method": "clip",
+      "low_confidence": false,
+      "top3": [
+        "grippro-anti-slip-yoga-mat",
+        "blackout-curtains-pair",
+        "homesoft-memory-foam-slippers"
+      ]
+    },
+    {
+      "photo": "https://commons.wikimedia.org/wiki/File:The_Umbrella_Workshop.jpg",
+      "shows": "paper umbrellas being made; the catalog sells no umbrellas, nearest is rain gear",
+      "method": "clip",
+      "low_confidence": false,
+      "top3": [
+        "monsoon-rubber-flip-flops",
+        "the-monsoon-letters",
+        "feather-carbon-badminton-racket"
+      ]
+    },
+    {
+      "photo": "https://commons.wikimedia.org/wiki/File:M27-Dumbbell_Nebula-29-07-2026.jpg",
+      "shows": "the Dumbbell Nebula (a space photo), not a dumbbell",
+      "method": "clip",
+      "low_confidence": true,
+      "top3": [
+        "little-explorers-space-atlas",
+        "machine-learning-made-practical",
+        "kashmir-willow-tennis-ball-bat"
+      ]
+    }
+  ]
+}

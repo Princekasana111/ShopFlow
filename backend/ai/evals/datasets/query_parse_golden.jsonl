@@ -1,0 +1,24 @@
+{"query": "running shoes under 3500", "expected": {"category_slug": "footwear", "min_price": null, "max_price": 3500, "in_stock_only": false}}
+{"query": "headphones below ₹5000", "expected": {"category_slug": "electronics", "min_price": null, "max_price": 5000, "in_stock_only": false}}
+{"query": "books under 500 rupees", "expected": {"category_slug": "books", "min_price": null, "max_price": 500, "in_stock_only": false}}
+{"query": "yoga mat", "expected": {"category_slug": "sports-fitness", "min_price": null, "max_price": null, "in_stock_only": false}}
+{"query": "kitchen appliances between 1000 and 3000", "expected": {"category_slug": "home-kitchen", "min_price": 1000, "max_price": 3000, "in_stock_only": false}}
+{"query": "smartwatch over 3000", "expected": {"category_slug": "electronics", "min_price": 3000, "max_price": null, "in_stock_only": false}}
+{"query": "jacket under 3k", "expected": {"category_slug": "clothing", "min_price": null, "max_price": 3000, "in_stock_only": false}}
+{"query": "gift ideas", "expected": {"category_slug": null, "min_price": null, "max_price": null, "in_stock_only": false}}
+{"query": "in stock earbuds under 2500", "expected": {"category_slug": "electronics", "min_price": null, "max_price": 2500, "in_stock_only": true}}
+{"query": "cheap bluetooth speaker", "expected": {"category_slug": "electronics", "min_price": null, "max_price": null, "in_stock_only": false}}
+{"query": "shoes ₹1000-₹2500", "expected": {"category_slug": "footwear", "min_price": 1000, "max_price": 2500, "in_stock_only": false}}
+{"query": "cricket bat above 5000", "expected": {"category_slug": "sports-fitness", "min_price": 5000, "max_price": null, "in_stock_only": false}}
+{"query": "novel under 400", "expected": {"category_slug": "books", "min_price": null, "max_price": 400, "in_stock_only": false}}
+{"query": "warm clothes for winter", "expected": {"category_slug": "clothing", "min_price": null, "max_price": null, "in_stock_only": false}}
+{"query": "something for my kitchen under 1500", "expected": {"category_slug": "home-kitchen", "min_price": null, "max_price": 1500, "in_stock_only": false}}
+{"query": "laptop charger", "expected": {"category_slug": "electronics", "min_price": null, "max_price": null, "in_stock_only": false}}
+{"query": "kurta for diwali under 1500", "expected": {"category_slug": "clothing", "min_price": null, "max_price": 1500, "in_stock_only": false}}
+{"query": "dumbbells under 4000 in stock", "expected": {"category_slug": "sports-fitness", "min_price": null, "max_price": 4000, "in_stock_only": true}}
+{"query": "bedsheet", "expected": {"category_slug": "home-kitchen", "min_price": null, "max_price": null, "in_stock_only": false}}
+{"query": "headphones around 2000 rupees", "expected": {"category_slug": "electronics", "min_price": null, "max_price": null, "in_stock_only": false}}
+{"query": "programming book for beginners", "expected": {"category_slug": "books", "min_price": null, "max_price": null, "in_stock_only": false}}
+{"query": "waterproof boots for trekking", "expected": {"category_slug": "footwear", "min_price": null, "max_price": null, "in_stock_only": false}}
+{"query": "something to keep tea hot on a train journey", "expected": {"category_slug": "home-kitchen", "min_price": null, "max_price": null, "in_stock_only": false}}
+{"query": "present for a 7 year old who likes space, max 600", "expected": {"category_slug": "books", "min_price": null, "max_price": 600, "in_stock_only": false}}

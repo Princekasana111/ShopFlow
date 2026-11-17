@@ -1,0 +1,491 @@
+{
+  "suite": "rag",
+  "config": {
+    "llm_provider": "offline",
+    "llm_model": "rule-based-v1",
+    "embedding_model": "BAAI/bge-small-en-v1.5",
+    "query_prefix": "",
+    "questions": 20,
+    "judge_model": null
+  },
+  "metrics": {
+    "answerable_correct": 0.9,
+    "has_citation": 1.0,
+    "key_fact_recall": 0.8824,
+    "retrieval_hit@1": 0.8824,
+    "retrieval_hit@3": 1.0
+  },
+  "details": [
+    {
+      "question": "How long do refunds take for prepaid orders?",
+      "expected": [
+        "returns",
+        "Refund timelines"
+      ],
+      "retrieved_top3": [
+        [
+          "returns",
+          "Refund timelines"
+        ],
+        [
+          "returns",
+          "Cancelling an order"
+        ],
+        [
+          "returns",
+          "Return window"
+        ]
+      ],
+      "answerable": true,
+      "answer": "Refunds are issued after the returned item passes the quality check at our warehouse. Prepaid orders are refunded to the original payment method within 5-7 working days. Cash on Delivery orders are refunded by bank transfer (NEFT) within 7 working days after you share your bank details. [1]",
+      "judge": null
+    },
+    {
+      "question": "I paid cash on delivery. How will I get my refund?",
+      "expected": [
+        "returns",
+        "Refund timelines"
+      ],
+      "retrieved_top3": [
+        [
+          "returns",
+          "Refund timelines"
+        ],
+        [
+          "shipping",
+          "Failed delivery attempts"
+        ],
+        [
+          "payments",
+          "Cash on Delivery"
+        ]
+      ],
+      "answerable": true,
+      "answer": "Refunds are issued after the returned item passes the quality check at our warehouse. Prepaid orders are refunded to the original payment method within 5-7 working days. Cash on Delivery orders are refunded by bank transfer (NEFT) within 7 working days after you share your bank details. [1]",
+      "judge": null
+    },
+    {
+      "question": "Can I return socks?",
+      "expected": [
+        "returns",
+        "Items that cannot be returned"
+      ],
+      "retrieved_top3": [
+        [
+          "returns",
+          "Items that cannot be returned"
+        ],
+        [
+          "returns",
+          "Condition of returned items"
+        ],
+        [
+          "returns",
+          "Return window"
+        ]
+      ],
+      "answerable": true,
+      "answer": "Innerwear, socks, opened personal-care items, books with writing or damage caused after delivery, and products marked \"Non-returnable\" on the product page cannot be returned. Gift cards cannot be returned or exchanged. [1]",
+      "judge": null
+    },
+    {
+      "question": "What is the return window for electronics?",
+      "expected": [
+        "returns",
+        "Return window"
+      ],
+      "retrieved_top3": [
+        [
+          "returns",
+          "Return window"
+        ],
+        [
+          "returns",
+          "Items that cannot be returned"
+        ],
+        [
+          "returns",
+          "Condition of returned items"
+        ]
+      ],
+      "answerable": true,
+      "answer": "Most products can be returned within 10 days of delivery. Electronics have a 7-day replacement-only window: a defective or damaged electronic item is replaced with the same model, not refunded, unless the replacement is out of stock. [1]",
+      "judge": null
+    },
+    {
+      "question": "Is shipping free?",
+      "expected": [
+        "shipping",
+        "Shipping charges"
+      ],
+      "retrieved_top3": [
+        [
+          "shipping",
+          "Shipping charges"
+        ],
+        [
+          "returns",
+          "Cancelling an order"
+        ],
+        [
+          "shipping",
+          "Order tracking"
+        ]
+      ],
+      "answerable": true,
+      "answer": "Shipping is free on orders of ₹999 or more. Orders below ₹999 have a flat delivery charge of ₹79. Express delivery (next working day, metro cities only) costs ₹149 and must be selected before payment. [1]",
+      "judge": null
+    },
+    {
+      "question": "How much does express delivery cost?",
+      "expected": [
+        "shipping",
+        "Shipping charges"
+      ],
+      "retrieved_top3": [
+        [
+          "shipping",
+          "Shipping charges"
+        ],
+        [
+          "payments",
+          "Cash on Delivery"
+        ],
+        [
+          "shipping",
+          "Failed delivery attempts"
+        ]
+      ],
+      "answerable": true,
+      "answer": "Shipping is free on orders of ₹999 or more. Orders below ₹999 have a flat delivery charge of ₹79. Express delivery (next working day, metro cities only) costs ₹149 and must be selected before payment. [1]",
+      "judge": null
+    },
+    {
+      "question": "How long does delivery take to Bengaluru?",
+      "expected": [
+        "shipping",
+        "Delivery timelines"
+      ],
+      "retrieved_top3": [
+        [
+          "shipping",
+          "Delivery timelines"
+        ],
+        [
+          "shipping",
+          "Shipping charges"
+        ],
+        [
+          "payments",
+          "Cash on Delivery"
+        ]
+      ],
+      "answerable": true,
+      "answer": "Orders placed before 2 PM on a working day are dispatched the same day. Metro cities (Delhi NCR, Mumbai, Bengaluru, Chennai, Hyderabad, Kolkata, Pune) usually receive orders in 2-4 working days. Other locations take 4-7 working days. [1]",
+      "judge": null
+    },
+    {
+      "question": "Do you ship to the USA?",
+      "expected": [
+        "shipping",
+        "Delivery areas"
+      ],
+      "retrieved_top3": [
+        [
+          "shipping",
+          "Shipping charges"
+        ],
+        [
+          "shipping",
+          "Delivery areas"
+        ],
+        [
+          "shipping",
+          "Order tracking"
+        ]
+      ],
+      "answerable": true,
+      "answer": "Shipping is free on orders of ₹999 or more. Orders below ₹999 have a flat delivery charge of ₹79. Express delivery (next working day, metro cities only) costs ₹149 and must be selected before payment. [1]",
+      "judge": null
+    },
+    {
+      "question": "What happens if the courier can't deliver my package?",
+      "expected": [
+        "shipping",
+        "Failed delivery attempts"
+      ],
+      "retrieved_top3": [
+        [
+          "shipping",
+          "Failed delivery attempts"
+        ],
+        [
+          "shipping",
+          "Order tracking"
+        ],
+        [
+          "returns",
+          "How to start a return"
+        ]
+      ],
+      "answerable": true,
+      "answer": "The courier makes up to three delivery attempts. If all three fail, the package is returned to our warehouse and the full amount is refunded within 7 working days of the package reaching us, minus any shipping charge. [1]",
+      "judge": null
+    },
+    {
+      "question": "Is cash on delivery available for a ₹15,000 order?",
+      "expected": [
+        "payments",
+        "Cash on Delivery"
+      ],
+      "retrieved_top3": [
+        [
+          "payments",
+          "Cash on Delivery"
+        ],
+        [
+          "shipping",
+          "Delivery timelines"
+        ],
+        [
+          "returns",
+          "How to start a return"
+        ]
+      ],
+      "answerable": true,
+      "answer": "Cash on Delivery (COD) is available for orders up to ₹10,000 at serviceable PIN codes. A COD handling fee of ₹40 applies. Please keep exact change; couriers may also accept UPI at the door. [1]",
+      "judge": null
+    },
+    {
+      "question": "Is there a fee for COD?",
+      "expected": [
+        "payments",
+        "Cash on Delivery"
+      ],
+      "retrieved_top3": [
+        [
+          "payments",
+          "Cash on Delivery"
+        ],
+        [
+          "payments",
+          "Invoices and GST"
+        ],
+        [
+          "shipping",
+          "Shipping charges"
+        ]
+      ],
+      "answerable": true,
+      "answer": "Cash on Delivery (COD) is available for orders up to ₹10,000 at serviceable PIN codes. A COD handling fee of ₹40 applies. Please keep exact change; couriers may also accept UPI at the door. [1]",
+      "judge": null
+    },
+    {
+      "question": "Money was debited but my order failed. What now?",
+      "expected": [
+        "payments",
+        "Failed payments"
+      ],
+      "retrieved_top3": [
+        [
+          "payments",
+          "Failed payments"
+        ],
+        [
+          "returns",
+          "Cancelling an order"
+        ],
+        [
+          "shipping",
+          "Failed delivery attempts"
+        ]
+      ],
+      "answerable": true,
+      "answer": "If money is debited but the order is not confirmed, the amount is automatically reversed to your account within 5-7 working days. You do not need to contact support for this. [1]",
+      "judge": null
+    },
+    {
+      "question": "Can I add my GSTIN after placing the order?",
+      "expected": [
+        "payments",
+        "Invoices and GST"
+      ],
+      "retrieved_top3": [
+        [
+          "payments",
+          "Invoices and GST"
+        ],
+        [
+          "returns",
+          "Cancelling an order"
+        ],
+        [
+          "shipping",
+          "Order tracking"
+        ]
+      ],
+      "answerable": true,
+      "answer": "A GST invoice is emailed when your order ships and is also available on the order page. To add a GSTIN for business purchases, enter it at checkout before placing the order; it cannot be added afterwards. [1]",
+      "judge": null
+    },
+    {
+      "question": "How do I claim warranty on my headphones?",
+      "expected": [
+        "warranty",
+        "How to claim warranty"
+      ],
+      "retrieved_top3": [
+        [
+          "warranty",
+          "Manufacturer warranty"
+        ],
+        [
+          "warranty",
+          "How to claim warranty"
+        ],
+        [
+          "warranty",
+          "What warranty does not cover"
+        ]
+      ],
+      "answerable": true,
+      "answer": "Electronics and appliances carry the manufacturer's warranty stated on the product page, usually 1 year from the date of delivery. Keep your ShopFlow invoice: it is required for any warranty claim. [1]",
+      "judge": null
+    },
+    {
+      "question": "Does warranty cover water damage?",
+      "expected": [
+        "warranty",
+        "What warranty does not cover"
+      ],
+      "retrieved_top3": [
+        [
+          "warranty",
+          "What warranty does not cover"
+        ],
+        [
+          "warranty",
+          "How to claim warranty"
+        ],
+        [
+          "warranty",
+          "Manufacturer warranty"
+        ]
+      ],
+      "answerable": true,
+      "answer": "Physical damage, liquid damage, damage from using third-party chargers, normal wear and tear, and products repaired by unauthorised technicians are not covered. [1]",
+      "judge": null
+    },
+    {
+      "question": "How can I contact customer support?",
+      "expected": [
+        "account-and-support",
+        "Contacting support"
+      ],
+      "retrieved_top3": [
+        [
+          "account-and-support",
+          "Contacting support"
+        ],
+        [
+          "warranty",
+          "How to claim warranty"
+        ],
+        [
+          "account-and-support",
+          "Creating an account"
+        ]
+      ],
+      "answerable": true,
+      "answer": "Email support@shopflow.example or call 1800-000-0000 (toll free), 9 AM to 9 PM IST, Monday to Saturday. Please include your order number for faster help. [1]",
+      "judge": null
+    },
+    {
+      "question": "Can I cancel an order after it has shipped?",
+      "expected": [
+        "returns",
+        "Cancelling an order"
+      ],
+      "retrieved_top3": [
+        [
+          "returns",
+          "Cancelling an order"
+        ],
+        [
+          "shipping",
+          "Failed delivery attempts"
+        ],
+        [
+          "shipping",
+          "Order tracking"
+        ]
+      ],
+      "answerable": true,
+      "answer": "A pending order can be cancelled from My Orders before it ships, and the full amount is refunded. Shipped orders cannot be cancelled; refuse the delivery or start a return after it arrives. [1]",
+      "judge": null
+    },
+    {
+      "question": "Do you have a physical store in Mumbai?",
+      "expected": "unanswerable",
+      "retrieved_top3": [
+        [
+          "shipping",
+          "Delivery timelines"
+        ],
+        [
+          "payments",
+          "Payment security"
+        ],
+        [
+          "warranty",
+          "What warranty does not cover"
+        ]
+      ],
+      "answerable": true,
+      "answer": "Orders placed before 2 PM on a working day are dispatched the same day. Metro cities (Delhi NCR, Mumbai, Bengaluru, Chennai, Hyderabad, Kolkata, Pune) usually receive orders in 2-4 working days. Other locations take 4-7 working days. [1]",
+      "judge": null
+    },
+    {
+      "question": "What is the capital of France?",
+      "expected": "unanswerable",
+      "retrieved_top3": [
+        [
+          "shipping",
+          "Delivery timelines"
+        ],
+        [
+          "shipping",
+          "Delivery areas"
+        ],
+        [
+          "payments",
+          "Payment security"
+        ]
+      ],
+      "answerable": false,
+      "answer": "I don't have information about that in our help center. Please contact ShopFlow support.",
+      "judge": null
+    },
+    {
+      "question": "Do you offer gift wrapping?",
+      "expected": "unanswerable",
+      "retrieved_top3": [
+        [
+          "returns",
+          "Items that cannot be returned"
+        ],
+        [
+          "returns",
+          "Condition of returned items"
+        ],
+        [
+          "returns",
+          "Cancelling an order"
+        ]
+      ],
+      "answerable": true,
+      "answer": "Innerwear, socks, opened personal-care items, books with writing or damage caused after delivery, and products marked \"Non-returnable\" on the product page cannot be returned. Gift cards cannot be returned or exchanged. [1]",
+      "judge": null
+    }
+  ]
+}

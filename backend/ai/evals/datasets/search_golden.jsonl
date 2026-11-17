@@ -1,0 +1,46 @@
+{"query": "noise cancelling headphones for flights", "relevant": ["aurora-anc-wireless-headphones"], "type": "keyword"}
+{"query": "bluetooth speaker for the beach", "relevant": ["boombox-mini-bluetooth-speaker"], "type": "intent"}
+{"query": "portable charger for travel", "relevant": ["volt-20000mah-power-bank", "chargeduo-65w-gan-charger"], "type": "paraphrase"}
+{"query": "fitness tracker that works while swimming", "relevant": ["stridefit-smartwatch"], "type": "paraphrase"}
+{"query": "clicky keyboard for programmers", "relevant": ["keyclick-mechanical-keyboard"], "type": "paraphrase"}
+{"query": "quiet mouse for the library", "relevant": ["glide-silent-wireless-mouse"], "type": "paraphrase"}
+{"query": "camera for zoom calls", "relevant": ["clearview-1080p-webcam"], "type": "paraphrase"}
+{"query": "second screen for work from home", "relevant": ["lumen-24-inch-ips-monitor"], "type": "keyword"}
+{"query": "earphones for gym workouts", "relevant": ["pulse-true-wireless-earbuds"], "type": "paraphrase"}
+{"query": "trekking boots for the himalayas", "relevant": ["trailblazer-waterproof-hiking-boots"], "type": "paraphrase"}
+{"query": "shoes for rainy season running", "relevant": ["stride-aqua-waterproof-running-shoes"], "type": "paraphrase"}
+{"query": "marathon training shoes", "relevant": ["stride-runner-road-running-shoes", "stride-aqua-waterproof-running-shoes"], "type": "intent"}
+{"query": "formal shoes for a job interview", "relevant": ["classic-leather-oxford-shoes"], "type": "intent"}
+{"query": "slippers to wear at home in winter", "relevant": ["homesoft-memory-foam-slippers"], "type": "keyword"}
+{"query": "shoes that light up for children", "relevant": ["kids-light-up-sneakers"], "type": "paraphrase"}
+{"query": "non marking shoes for indoor court", "relevant": ["courtpro-badminton-shoes"], "type": "keyword"}
+{"query": "flip flops", "relevant": ["monsoon-rubber-flip-flops"], "type": "keyword"}
+{"query": "quick dry shirt for the gym", "relevant": ["drymax-sports-t-shirt"], "type": "keyword"}
+{"query": "warm jacket for a manali trip in december", "relevant": ["windproof-puffer-jacket", "fleece-zip-hoodie"], "type": "intent"}
+{"query": "something to wear in heavy rain", "relevant": ["packable-rain-jacket", "monsoon-rubber-flip-flops"], "type": "intent"}
+{"query": "outfit for diwali", "relevant": ["festive-cotton-kurta"], "type": "intent"}
+{"query": "stretchy pants for yoga", "relevant": ["yogaflex-high-waist-leggings"], "type": "paraphrase"}
+{"query": "something to keep my coffee hot for hours", "relevant": ["thermosteel-insulated-flask-1l"], "type": "paraphrase"}
+{"query": "cook snacks without deep frying", "relevant": ["crispair-air-fryer-4l"], "type": "paraphrase"}
+{"query": "pan that works on induction", "relevant": ["ceramic-non-stick-frying-pan"], "type": "keyword"}
+{"query": "make the bedroom dark for daytime sleep", "relevant": ["blackout-curtains-pair"], "type": "paraphrase"}
+{"query": "light for studying at night", "relevant": ["focus-led-desk-lamp"], "type": "paraphrase"}
+{"query": "bottle for school", "relevant": ["hydro-steel-water-bottle-750ml", "thermosteel-insulated-flask-1l"], "type": "keyword"}
+{"query": "boil water fast for tea", "relevant": ["quickboil-electric-kettle"], "type": "paraphrase"}
+{"query": "learn programming from scratch", "relevant": ["the-python-pathway"], "type": "paraphrase"}
+{"query": "book about RAG and AI agents", "relevant": ["building-llm-applications"], "type": "keyword"}
+{"query": "prepare for coding interviews", "relevant": ["competitive-coding-handbook"], "type": "keyword"}
+{"query": "murder mystery novel", "relevant": ["midnight-at-the-haveli"], "type": "paraphrase"}
+{"query": "how to invest my first salary", "relevant": ["mindful-money"], "type": "paraphrase"}
+{"query": "book to reduce stress and anxiety", "relevant": ["the-calm-mind"], "type": "paraphrase"}
+{"query": "gift for a kid who loves planets", "relevant": ["little-explorers-space-atlas"], "type": "intent"}
+{"query": "home gym weights", "relevant": ["adjustable-dumbbell-set-20kg"], "type": "paraphrase"}
+{"query": "bat for gully cricket", "relevant": ["kashmir-willow-tennis-ball-bat"], "type": "paraphrase"}
+{"query": "cardio equipment for HIIT", "relevant": ["speed-skipping-rope"], "type": "keyword"}
+{"query": "safety gear for cycling at night", "relevant": ["aeroride-cycling-helmet"], "type": "intent"}
+{"query": "sore muscles after running", "relevant": ["recovery-foam-roller"], "type": "paraphrase"}
+{"query": "wireles earbuds", "relevant": ["pulse-true-wireless-earbuds"], "type": "typo"}
+{"query": "hedphones", "relevant": ["aurora-anc-wireless-headphones"], "type": "typo"}
+{"query": "yoga matt", "relevant": ["grippro-anti-slip-yoga-mat"], "type": "typo"}
+{"query": "IPX7 waterproof", "relevant": ["boombox-mini-bluetooth-speaker"], "type": "spec"}
+{"query": "65W GaN", "relevant": ["chargeduo-65w-gan-charger"], "type": "spec"}
