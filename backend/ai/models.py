@@ -178,3 +178,16 @@ class EvalRun(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+
+
+class RuntimeSetting(models.Model):
+    """A setting staff can change while the site runs (for example the local model's on/off switch).
+    Stored in the database so every server process, and every restart, sees the same value."""
+
+    key = models.CharField(max_length=60, primary_key=True)
+    value = models.JSONField(default=dict, blank=True)
+    updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.key} = {self.value}"

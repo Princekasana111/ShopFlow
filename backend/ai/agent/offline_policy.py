@@ -19,7 +19,13 @@ POLICY_RE = re.compile(
     r"cod|cash on delivery|emi|upi|invoice|gst|cancel|cancellation|privacy|support|contact|policy|policies)\b",
     re.I,
 )
+CHECK_RE = re.compile(
+    r"\b(check (?:my |the )?(?:cart|basket)|before (?:i|we) (?:buy|check ?out|order)|already (?:own|have|bought)|"
+    r"do i (?:already )?(?:need|own|have)|duplicates?)\b",
+    re.I,
+)
 ADD_RE = re.compile(r"\b(add|put)\b.*\b(cart|basket)\b|\bbuy\b", re.I)
+SIZE_RE = re.compile(r"\b(?:in\s+)?(?:size\s+)?(UK\s?\d{1,2})\b|\bsize\s+(XXL|XL|XS|S|M|L|\d{2})\b", re.I)
 CART_RE = re.compile(r"\b(cart|basket)\b", re.I)
 ORDER_ID_RE = re.compile(r"\border\s*(?:#|no\.?|number)?\s*(\d+)\b", re.I)
 ORDERS_RE = re.compile(r"\b(my orders?|recent orders?|order status|track|tracking|where is my)\b", re.I)
@@ -78,8 +84,10 @@ def _tool_use(name: str, tool_input: dict) -> dict:
 
 def classify(text: str) -> tuple[str, dict]:
     """Return (intent, first tool input)."""
+    if CHECK_RE.search(text):
+        return "check_purchase", {"requirements": text[:300]}
     if ADD_RE.search(text):
-        query = re.sub(r"\s+", " ", FILLER_RE.sub(" ", QTY_RE.sub(" ", text))).strip(" ,.") or text
+        query = re.sub(r"\s+", " ", FILLER_RE.sub(" ", QTY_RE.sub(" ", SIZE_RE.sub(" ", text)))).strip(" ,.") or text
         return "add_to_cart", {"query": query, "limit": 5}
     if CART_RE.search(text):
         return "view_cart", {}
@@ -127,10 +135,22 @@ def _compose(text: str, calls: list[dict]) -> str:
         stock = "In stock." if data.get("stock", 0) > 0 else "Currently out of stock."
         return f"**{data['name']}** by {data['brand']} costs {_price(data['price'])}. {stock}{rating}\n\n{data['description']}"
     if name == "add_to_cart":
-        cart = data["cart"]
-        return (f"Added {data['added']['quantity_added']} × **{data['added']['name']}** to your cart. "
-                f"Your cart now has {cart['item_count']} item(s), total {_price(cart['total'])}. "
-                "Review it on the Cart page when you're ready to check out.")
+        cart, added = data["cart"], data["added"]
+        size = f" in size {added['size']}" if added.get("size") else ""
+        answer = (f"Added {added['quantity_added']} × **{added['name']}**{size} to your cart. "
+                  f"Your cart now has {cart['item_count']} item(s), total {_price(cart['total'])}. "
+                  "Review it on the Cart page when you're ready to check out.")
+        if added.get("size_note"):
+            answer += f"\n\n{added['size_note']}"
+        if data.get("heads_up"):
+            answer += f"\n\nHeads-up: {data['heads_up'].replace('The customer already has', 'you already have')}"
+        return answer
+    if name == "check_purchase":
+        findings = [(c["check"], f) for c in data.get("checks", []) for f in c.get("findings", []) if f["severity"] in ("fail", "warn")]
+        if not findings:
+            return "Before you buy: everything checks out (sizes, compatibility, your needs, things you own, alternatives)."
+        lines = [f"- **{check}**: {f['product'] + ': ' if f.get('product') else ''}{f['message']}" for check, f in findings[:5]]
+        return f"Before you buy: {data['verdict']['headline']}.\n" + "\n".join(lines) + "\n\nSee the full check on the Cart page."
     if name == "view_cart":
         if not data.get("items"):
             return "Your cart is empty."
@@ -179,6 +199,10 @@ def decide_next_turn(messages: list[dict], tools: list[dict]) -> list[dict]:
                 choice = results[0]
             qty_match = QTY_RE.search(text)
             quantity = int(next(g for g in qty_match.groups() if g)) if qty_match else 1
-            return [_tool_use("add_to_cart", {"product_id": choice["id"], "quantity": max(1, min(quantity, 10))})]
+            tool_input = {"product_id": choice["id"], "quantity": max(1, min(quantity, 10))}
+            if size_match := SIZE_RE.search(text):
+                size = next(g for g in size_match.groups() if g).upper()
+                tool_input["size"] = re.sub(r"^UK\s?", "UK ", size)
+            return [_tool_use("add_to_cart", tool_input)]
 
     return [{"type": "text", "text": _compose(text, calls)}]

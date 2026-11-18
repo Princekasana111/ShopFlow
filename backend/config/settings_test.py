@@ -6,6 +6,7 @@ from .settings import AI, REST_FRAMEWORK
 AI.update(
     {
         "LLM_PROVIDER": "offline",
+        "LOCAL_LLM_URL": "",  # tests never call a local model (the provider is tested with a mock transport)
         "EMBEDDING_PROVIDER": "hash",
         "VISUAL_PROVIDER": "hash",
         "PLANNER_MIN_SIMILARITY": 0.0,
@@ -22,6 +23,8 @@ REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
 }
 
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
+
+CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": "shopflow-tests"}}
 
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},

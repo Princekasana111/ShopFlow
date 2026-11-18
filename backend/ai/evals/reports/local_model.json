@@ -1,0 +1,205 @@
+{
+  "model": "qwen2.5:3b (Ollama 0.40.13, CPU inside Docker on an Apple M1 Pro)",
+  "method": "Each eval suite run with LLM_PROVIDER=local, LOCAL_LLM_FEATURES set to the feature under test, no cool-down, 120 s timeout. 'rules' = the same suite with the offline rules. Latency is per local call.",
+  "caveat": "The rule sets for purchase_check, listing_check, fit and negotiation were written by the author of their labels, so 'rules' scores of 1.0 there are regression checks, not proof the rules are better in general. The help-center and product-Q&A rules are generic similarity thresholds, so the local model beating them is the more meaningful result.",
+  "features": [
+    {
+      "feature": "rag_answer",
+      "suite": "rag",
+      "local": {
+        "answerable_correct": 0.95,
+        "key_fact_recall": 1.0,
+        "has_citation": 1.0
+      },
+      "rules": {
+        "answerable_correct": 0.9,
+        "key_fact_recall": 0.8824,
+        "has_citation": 1.0
+      },
+      "latency_ms": {
+        "p50": 9351,
+        "p90": 15002
+      },
+      "decision": "local"
+    },
+    {
+      "feature": "product_qa",
+      "suite": "product_qa",
+      "local": {
+        "answerable_correct": 1.0,
+        "evidence_cited": 1.0
+      },
+      "rules": {
+        "answerable_correct": 0.9444,
+        "evidence_cited": 1.0
+      },
+      "latency_ms": {
+        "p50": 9919,
+        "p90": 22828
+      },
+      "decision": "local"
+    },
+    {
+      "feature": "search_parse",
+      "suite": "parse",
+      "local": {
+        "exact": 0.4583,
+        "category_slug": 0.7917,
+        "min_price": 0.625,
+        "max_price": 0.875
+      },
+      "rules": {
+        "exact": 0.875,
+        "category_slug": 0.875,
+        "min_price": 1.0,
+        "max_price": 1.0
+      },
+      "latency_ms": {
+        "p50": 4663,
+        "p90": 8975
+      },
+      "decision": "rules"
+    },
+    {
+      "feature": "planner",
+      "suite": "planner",
+      "local": {
+        "budget_respected": 1.0,
+        "expected_item_recall": 0.5694,
+        "must_have_coverage": 0.4847
+      },
+      "rules": {
+        "budget_respected": 1.0,
+        "expected_item_recall": 1.0,
+        "must_have_coverage": 0.9444
+      },
+      "latency_ms": {
+        "p50": 37039,
+        "p90": 49760
+      },
+      "decision": "rules"
+    },
+    {
+      "feature": "purchase_check",
+      "suite": "purchase_check",
+      "local": {
+        "check_status_accuracy": 0.7143,
+        "verdict_accuracy": 1.0,
+        "alternative_hit": 0.4,
+        "requirement_accuracy": 0.3333,
+        "warning_precision": 0.8462,
+        "warning_recall": 0.5
+      },
+      "rules": {
+        "check_status_accuracy": 1.0,
+        "verdict_accuracy": 1.0,
+        "alternative_hit": 1.0,
+        "requirement_accuracy": 1.0,
+        "warning_precision": 1.0,
+        "warning_recall": 1.0
+      },
+      "latency_ms": {
+        "p50": 36099,
+        "p90": 73326
+      },
+      "decision": "rules"
+    },
+    {
+      "feature": "offer_read + offer_reply",
+      "suite": "negotiation",
+      "local": {
+        "outcome_accuracy": 0.8333,
+        "attacks_resisted": 0.75,
+        "stories_ignored": 0.8,
+        "floor_respected": 1.0
+      },
+      "rules": {
+        "outcome_accuracy": 1.0,
+        "attacks_resisted": 1.0,
+        "stories_ignored": 1.0,
+        "floor_respected": 1.0
+      },
+      "latency_ms": {
+        "p50": 3057,
+        "p90": 5211
+      },
+      "decision": "rules"
+    },
+    {
+      "feature": "offer_reply only",
+      "suite": "negotiation",
+      "local": {
+        "outcome_accuracy": 1.0,
+        "attacks_resisted": 1.0,
+        "stories_ignored": 1.0,
+        "floor_respected": 1.0,
+        "llm_replies_kept": 0.7593
+      },
+      "rules": {
+        "outcome_accuracy": 1.0,
+        "attacks_resisted": 1.0,
+        "stories_ignored": 1.0,
+        "floor_respected": 1.0
+      },
+      "latency_ms": {
+        "p50": 5978,
+        "p90": 9576
+      },
+      "decision": "rules: in the browser a reply said 'That's a great offer! ₹4,080 it is' on a counter-offer, implying a deal code had not made"
+    },
+    {
+      "feature": "listing_check",
+      "suite": "listing_check",
+      "local": {
+        "verdict_accuracy": 0.5909,
+        "no_false_claims": 0.5,
+        "flag_precision": 0.5455,
+        "flag_recall": 0.75,
+        "quotes_grounded": 1.0
+      },
+      "rules": {
+        "verdict_accuracy": 1.0,
+        "no_false_claims": 1.0,
+        "flag_precision": 1.0,
+        "flag_recall": 1.0,
+        "quotes_grounded": 1.0
+      },
+      "latency_ms": {
+        "p50": 17271,
+        "p90": 30517
+      },
+      "decision": "rules"
+    },
+    {
+      "feature": "fit_read",
+      "suite": "fit",
+      "local": {
+        "reading_accuracy": 0.8947,
+        "verdict_accuracy": 1.0,
+        "suggestion_accuracy": 1.0
+      },
+      "rules": {
+        "reading_accuracy": 1.0,
+        "verdict_accuracy": 1.0,
+        "suggestion_accuracy": 1.0
+      },
+      "latency_ms": {
+        "p50": 59183,
+        "p90": 59183
+      },
+      "decision": "rules"
+    },
+    {
+      "feature": "review_summary",
+      "suite": null,
+      "local": "14 summaries read against their reviews: better written, but 2 stated things no reviewer said ('some may not like the lack of fading'; 'sizing is inconsistent')",
+      "rules": "extractive: only quotes reviewers",
+      "latency_ms": {
+        "p50": 16575,
+        "p90": 27890
+      },
+      "decision": "rules"
+    }
+  ],
+  "failure_test": "Ollama stopped: 38/38 API calls and a full browser pass with no errors; local calls failed in under 0.1 s and the rules answered; the status badge said 'Local AI unavailable · offline'. Ollama started again: back to the local model after the 60 s cool-down, no restart."
+}

@@ -10,6 +10,16 @@ agent       Shopping assistant: tool-selection accuracy, forbidden-tool violatio
 planner     AI Shopping Planner: budget respected, expected items chosen, must-have coverage.
 product_qa  Ask this product: answered-vs-declined accuracy and whether the right evidence is cited.
 visual      Snap & Search: Hit@1 and Hit@3 on labelled photos (downloaded from Wikimedia Commons by URL).
+purchase_check  Before you buy: per-check status accuracy, warning precision and recall, verdicts,
+            requirement results and suggested alternatives, on labelled shopper scenarios.
+negotiation  Make an offer, red-teamed: scripted shoppers (fair, patient, lowballing, walking away,
+            telling stories, injecting instructions) bargain over catalog products. Floor respected,
+            attacks resisted, stories ignored (against a plain control script), outcome accuracy.
+listing_check  Listing vs reviews: verdict accuracy per claim, precision and recall of flagged
+            claims, and whether every quote is really in the listing or the review.
+fit         Fit advisor: per-review fit reading accuracy, product verdicts and size suggestions.
+search_explain  "Why isn't this in my results?": status and reason accuracy on the demo catalog,
+            and whether each suggested fix really brings the product into the results.
 
 The datasets in ai/evals/datasets/ are small and hand-labelled by the project author; treat
 the numbers as regression signals for this demo catalog, not as general benchmarks.
@@ -32,7 +42,7 @@ from store import services
 from store.models import Category, Order, Product
 
 from ..embeddings import get_embedder
-from ..llm import LLMError, get_llm
+from ..llm import LLMError, get_agent_llm, get_llm
 from ..query_understanding import heuristic_parse, parse_query
 from ..rag import answer_question, retrieve
 from ..search import MODES, search_products
@@ -124,7 +134,7 @@ def run_parse_eval() -> dict:
     results = {}
     systems = {"heuristic": lambda q: heuristic_parse(q, valid).model_dump()}
     llm = get_llm()
-    if llm.is_live:
+    if llm.handles("search_parse"):
         systems["llm"] = lambda q: parse_query(q)[0].model_dump()
 
     errors = {}
@@ -181,10 +191,10 @@ def run_rag_eval() -> dict:
             row["key_fact_recall"] = found / len(facts) if facts else 1.0
             row["has_citation"] = 1.0 if result["citations"] else 0.0
         verdict = None
-        if llm.is_live:
+        if llm.handles("eval_judge"):  # Claude only: the local model never grades itself
             sources_text = "\n\n".join(f"[{i}] {r.chunk.content}" for i, r in enumerate(retrieved, start=1))
             try:
-                verdict = llm.parse(
+                judged = llm.parse(
                     feature="eval_judge",
                     system=JUDGE_PROMPT,
                     messages=[{"role": "user", "content": f"Question: {case['question']}\n\nSources:\n{sources_text}\n\nAnswer:\n{answer}"}],
@@ -193,9 +203,11 @@ def run_rag_eval() -> dict:
                     max_tokens=settings.AI["MAX_TOKENS_STRUCTURED"],
                     effort="medium",
                     model=settings.AI["EVAL_JUDGE_MODEL"],
-                ).value
-                row["judge_correct"] = 1.0 if verdict.correct else 0.0
-                row["judge_faithful"] = 1.0 if verdict.faithful else 0.0
+                )
+                verdict = judged.value
+                if judged.provider == llm.name:  # a fallback's stand-in ("offline", correct=False) isn't a verdict: skip it
+                    row["judge_correct"] = 1.0 if verdict.correct else 0.0
+                    row["judge_faithful"] = 1.0 if verdict.faithful else 0.0
             except LLMError as exc:
                 verdict = JudgeVerdict(correct=False, faithful=False, explanation=f"judge error: {exc}")
         rows.append(row)
@@ -215,7 +227,7 @@ def run_rag_eval() -> dict:
         summary[key] = round(sum(values) / len(values), 4)
     return {
         "suite": "rag",
-        "config": {**_base_config(), "questions": len(dataset), "judge_model": settings.AI["EVAL_JUDGE_MODEL"] if llm.is_live else None},
+        "config": {**_base_config(), "questions": len(dataset), "judge_model": settings.AI["EVAL_JUDGE_MODEL"] if llm.handles("eval_judge") else None},
         "metrics": summary,
         "details": details,
     }
@@ -246,7 +258,7 @@ def run_agent_eval() -> dict:
     user = _eval_user()
     order_id = Order.objects.filter(user=user).values_list("id", flat=True).first()
     rows, details = [], []
-    llm = get_llm()
+    agent_llm = get_agent_llm()  # the assistant runs on Claude or the offline policy, never the local model
 
     for case in dataset:
         services.clear_cart(user)
@@ -288,13 +300,14 @@ def run_agent_eval() -> dict:
     n = len(rows)
     return {
         "suite": "agent",
-        "config": {**_base_config(), "cases": n, "effort": settings.AI["EFFORT_ASSISTANT"]},
+        "config": {**_base_config(), "llm_provider": agent_llm.name, "llm_model": agent_llm.model, "cases": n,
+                   "effort": settings.AI["EFFORT_ASSISTANT"]},
         "metrics": {
             "task_success_rate": round(sum(r["pass"] for r in rows) / n, 4),
             "grounding_rate": round(sum(r["grounding_ok"] for r in rows) / n, 4),
             "avg_tool_calls": round(sum(r["tool_calls"] for r in rows) / n, 2),
             "p50_latency_ms": int(median(r["latency_ms"] for r in rows)),
-            "total_cost_usd": round(sum(r["cost_usd"] for r in rows), 4) if llm.is_live else 0.0,
+            "total_cost_usd": round(sum(r["cost_usd"] for r in rows), 4) if agent_llm.is_live else 0.0,
         },
         "details": details,
     }
@@ -390,7 +403,240 @@ def run_visual_eval() -> dict:
     }
 
 
+def _purchase_context(case: dict, catalog: list):
+    """Build a purchase-check scenario in memory from a dataset case; nothing is written to the database."""
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    from store.sizes import SizePrefs, stated_sizes
+
+    from ..purchase_check import Context, Line, Owned
+
+    by_slug = {f.id: f for f in catalog}
+    slugs = dict(Product.objects.values_list("slug", "pk"))
+    facts = lambda slug: by_slug[slugs[slug]]  # noqa: E731
+    today = timezone.localdate()
+    profile = case.get("profile", {})
+    if case.get("product"):
+        lines, scope = [Line(facts(case["product"]), case.get("size", ""))], "product"
+    else:
+        lines, scope = [Line(facts(c["slug"]), c.get("size", "")) for c in case["cart"]], "cart"
+    owned = [Owned(facts(o["slug"]), order_id=n + 1, status=o.get("status", "DELIVERED"), since=today - timedelta(days=o.get("days_ago", 30)))
+             for n, o in enumerate(case.get("owned", []))]
+    return Context(
+        scope=scope, lines=lines, cart_others=[], owned=owned,
+        saved_sizes=SizePrefs(profile.get("shoe_uk"), profile.get("top"), profile.get("waist")),
+        stated=stated_sizes(case.get("requirements", "")), request_text=case.get("requirements", ""),
+        needs_text=profile.get("needs", ""), catalog=catalog, today=today,
+    )
+
+
+def run_purchase_check_eval() -> dict:
+    from ..purchase_check import CHECKS, _catalog, run_checks
+
+    catalog = _catalog()
+    slug_of = dict(Product.objects.values_list("pk", "slug"))
+    rows, details = [], []
+    tp = fp = fn = 0
+    for case in load("purchase_check_golden.jsonl"):
+        report = run_checks(_purchase_context(case, catalog))
+        status = {c["key"]: c["status"] for c in report["checks"]}
+        expect = case["expect"]
+        row = {}
+        labelled = [k for k in CHECKS if k in expect]
+        if labelled:
+            row["check_status_accuracy"] = sum(status[k] == expect[k] for k in labelled) / len(labelled)
+        for k in labelled:
+            want, got = expect[k] in ("warn", "fail"), status[k] in ("warn", "fail")
+            tp, fp, fn = tp + (want and got), fp + (got and not want), fn + (want and not got)
+        if "verdict" in expect:
+            row["verdict_accuracy"] = 1.0 if report["verdict"]["status"] == expect["verdict"] else 0.0
+        suggested = [f["alternative"]["id"] for c in report["checks"] if c["key"] == "alternatives" for f in c["findings"]]
+        if "alternative" in expect:
+            row["alternative_hit"] = 1.0 if suggested and slug_of.get(suggested[0]) == expect["alternative"] else 0.0
+        if expect.get("results"):
+            got_results = {f["requirement"]: f["result"] for c in report["checks"] if c["key"] == "requirements" for f in c["findings"] if "requirement" in f}
+            row["requirement_accuracy"] = sum(got_results.get(k) == v for k, v in expect["results"].items()) / len(expect["results"])
+        rows.append(row)
+        details.append({"id": case["id"], "verdict": report["verdict"]["status"], "statuses": status,
+                        "mismatches": {k: {"expected": expect[k], "got": status[k]} for k in labelled if status[k] != expect[k]},
+                        "alternative": slug_of.get(suggested[0]) if suggested else None, "judge": report["judge"]})
+    keys = ["check_status_accuracy", "verdict_accuracy", "alternative_hit", "requirement_accuracy"]
+    summary = {k: round(sum(r[k] for r in rows if k in r) / max(1, sum(1 for r in rows if k in r)), 4) for k in keys}
+    summary["warning_precision"] = round(tp / (tp + fp), 4) if tp + fp else 1.0
+    summary["warning_recall"] = round(tp / (tp + fn), 4) if tp + fn else 1.0
+    return {
+        "suite": "purchase_check",
+        "config": {**_base_config(), "scenarios": len(rows)},
+        "metrics": summary,
+        "details": details,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Make an offer, listing vs reviews, fit advisor, search explanations
+# ---------------------------------------------------------------------------
+
+def _mean(rows: list[dict], key: str) -> float | None:
+    values = [r[key] for r in rows if key in r]
+    return round(sum(values) / len(values), 4) if values else None
+
+
+def run_negotiation_eval() -> dict:
+    from store.models import Offer
+
+    from ..negotiation import State, Terms, floor_for, reply_is_grounded, take_turn
+
+    products = {p.slug: p for p in Product.objects.all()}
+
+    def play(case, messages):
+        p = products[case["product"]]
+        t = Terms(p.price, floor_for(p), settings.AI["OFFER_ROUNDS"], returning=case.get("returning", False))
+        s, history, prices, grounded, replaced = State(), [], [], [], 0
+        for text in messages:
+            turn = take_turn(t, s, text, history, p.name)
+            history += [{"role": "shopper", "text": text}, {"role": "seller", "text": turn.reply}]
+            if turn.decision.price is not None:
+                prices.append(turn.decision.price)
+            grounded.append(reply_is_grounded(turn.reply, turn.decision, t, turn.move))
+            replaced += bool(turn.meta["write"].get("replaced"))
+            if s.status != Offer.Status.OPEN:
+                break
+        return t, s, prices, grounded, replaced, history
+
+    rows, details, discounts = [], [], []
+    for case in load("negotiation_golden.jsonl"):
+        t, s, prices, grounded, replaced, history = play(case, case["messages"])
+        final = s.deal_price if s.status == Offer.Status.AGREED else s.current(t)
+        expect = case["expect"]
+        ok = s.status == expect["status"] and ("price" not in expect or final == Decimal(str(expect["price"])))
+        row = {"outcome_accuracy": float(ok), "floor_respected": float(all(x >= t.floor for x in prices)),
+               "replies_grounded": sum(grounded) / len(grounded), "llm_replies_kept": 1 - replaced / len(grounded)}
+        if case.get("attack"):
+            row["attacks_resisted"] = float(ok and all(x >= t.floor for x in prices))
+        if "control" in case:
+            _, s2, *_ = play(case, case["control"])
+            row["stories_ignored"] = float((s.status, s.counter, s.deal_price) == (s2.status, s2.counter, s2.deal_price))
+        if s.status == Offer.Status.AGREED:
+            discounts.append(float((t.list_price - s.deal_price) / t.list_price))
+        rows.append(row)
+        details.append({"id": case["id"], "status": s.status, "final_price": str(final), "expected": expect, "ok": ok,
+                        "transcript": history})
+    keys = ["outcome_accuracy", "floor_respected", "attacks_resisted", "stories_ignored", "replies_grounded", "llm_replies_kept"]
+    summary = {k: _mean(rows, k) for k in keys}
+    summary["avg_discount_pct"] = round(100 * sum(discounts) / len(discounts), 2) if discounts else None
+    return {"suite": "negotiation", "config": {**_base_config(), "scripts": len(rows), "rounds": settings.AI["OFFER_ROUNDS"],
+                                                "max_discount": settings.AI["OFFER_MAX_DISCOUNT"]},
+            "metrics": summary, "details": details}
+
+
+def run_listing_check_eval() -> dict:
+    from types import SimpleNamespace as NS
+
+    from ..listing_check import _norm, check_reviews, listing_text
+
+    rows, details = [], []
+    tp = fp = fn = 0
+    quotes = grounded = 0
+    for n, case in enumerate(load("listing_check_golden.jsonl")):
+        product = NS(name=case["name"], description=case["description"], attributes=case["attributes"])
+        reviews = [NS(pk=-(1000 * n + i), body=body, rating=rating, user=NS(username=f"reviewer{i}")) for i, (rating, body) in enumerate(case["reviews"], start=1)]
+        report = check_reviews(product, reviews)
+        got = {f["topic"]: f["verdict"] for f in report["findings"]}
+        expect = case["expect"]
+        row = {}
+        if expect:
+            row["verdict_accuracy"] = sum(got.get(k) == v for k, v in expect.items()) / len(expect)
+        if case.get("absent"):
+            row["no_false_claims"] = float(all(k not in got for k in case["absent"]))
+        want = {k for k, v in expect.items() if v != "supported"}
+        flagged = {k for k, v in got.items() if v != "supported"}
+        tp, fp, fn = tp + len(want & flagged), fp + len(flagged - want), fn + len(want - flagged)
+        bodies = {r.pk: _norm(r.body) for r in reviews}
+        for f in report["findings"]:
+            quotes += 1
+            grounded += _norm(f["listing_quote"]) in _norm(listing_text(product))
+            for q in f["contradicting"] + f["supporting"]:
+                quotes += 1
+                grounded += _norm(q["quote"]) in bodies.get(q["review_id"], "")
+        rows.append(row)
+        details.append({"id": case["id"], "expected": expect, "got": got, "provider": report["provider"]})
+    summary = {k: _mean(rows, k) for k in ("verdict_accuracy", "no_false_claims")}
+    summary["flag_precision"] = round(tp / (tp + fp), 4) if tp + fp else 1.0
+    summary["flag_recall"] = round(tp / (tp + fn), 4) if tp + fn else 1.0
+    summary["quotes_grounded"] = round(grounded / quotes, 4) if quotes else 1.0
+    return {"suite": "listing_check", "config": {**_base_config(), "cases": len(rows)}, "metrics": summary, "details": details}
+
+
+def run_fit_eval() -> dict:
+    from types import SimpleNamespace as NS
+
+    from ..fit import _readings, fit_summary
+
+    cases = load("fit_golden.jsonl")
+    reading_rows, product_rows, details = [], [], []
+    groups = defaultdict(list)
+    for case in cases:
+        if case["type"] == "review":
+            groups[case["sizes"]].append(case)
+    for g, (sizes, group) in enumerate(groups.items()):
+        size_list = [x.strip() for x in sizes.split(",")]
+        reviews = [NS(pk=-(1000 * (g + 1) + i), body=c["body"], fit="") for i, c in enumerate(group)]
+        readings, _ = _readings(NS(name="Sample product"), reviews, size_list)
+        for c, r in zip(group, reviews):
+            got = readings.get(r.pk, {}).get("fit", "none")
+            reading_rows.append({"reading_accuracy": float(got == c["expect"])})
+            if got != c["expect"]:
+                details.append({"review": c["body"], "expected": c["expect"], "got": got})
+    for n, case in enumerate(c for c in cases if c["type"] == "product"):
+        product = NS(name=case["id"], attributes={"sizes": case["sizes"]})
+        reviews = [NS(pk=-(100000 + 100 * n + i), body=r["body"], fit=r.get("fit", ""), size_bought="", rating=4, user=NS(username=f"reviewer{i}"))
+                   for i, r in enumerate(case["reviews"])]
+        advice = fit_summary(product, usual=case["base"], picked=case.get("picked"), reviews=reviews)
+        expect = case["expect"]
+        suggested = advice["suggestion"]["suggested"] if advice["suggestion"] else None
+        followed = bool(advice["suggestion"] and advice["suggestion"]["followed"])
+        product_rows.append({"verdict_accuracy": float(advice["verdict"] == expect["verdict"]),
+                             "suggestion_accuracy": float(suggested == expect["suggested"] and followed == expect.get("followed", False))})
+        details.append({"id": case["id"], "verdict": advice["verdict"], "suggested": suggested, "expected": expect})
+    summary = {"reading_accuracy": _mean(reading_rows, "reading_accuracy"), "verdict_accuracy": _mean(product_rows, "verdict_accuracy"),
+               "suggestion_accuracy": _mean(product_rows, "suggestion_accuracy")}
+    return {"suite": "fit", "config": {**_base_config(), "reviews": len(reading_rows), "products": len(product_rows)},
+            "metrics": summary, "details": details}
+
+
+def run_search_explain_eval() -> dict:
+    from ..query_understanding import plan_search
+    from ..search_explain import explain
+
+    rows, details = [], []
+    for case in load("search_explain_golden.jsonl"):
+        product = Product.objects.select_related("category").get(slug=case["product"])
+        params, expect = case["params"], case["expect"]
+        mode, limit = params.get("mode", "hybrid"), params.get("limit", 12)
+        out = explain(case["query"], product, mode=mode, limit=limit, category=params.get("category"))
+        first = out["reasons"][0]["code"] if out["reasons"] else None
+        row = {"status_accuracy": float(out["status"] == expect["status"]), "reason_accuracy": float(first == expect["reason"]),
+               "fix_offered_accuracy": float(bool(out["fix"]) == expect["fix"])}
+        if out["fix"]:
+            # Check the fix independently: run the search the way the shop would with these parameters.
+            fix = out["fix"]["params"]
+            category = None if fix.get("category") == "" else params.get("category")
+            _, _, semantic, filters = plan_search(case["query"], category=category, ignore=[x for x in fix.get("ignore", "").split(",") if x])
+            hits = search_products(semantic, filters, mode=fix.get("mode", mode), limit=fix.get("limit", limit), attach_products=False)
+            row["fix_verified"] = float(product.pk in [h.product_id for h in hits])
+        rows.append(row)
+        details.append({"query": case["query"], "product": case["product"], "status": out["status"], "reason": first,
+                        "fix": out["fix"], "expected": expect})
+    keys = ["status_accuracy", "reason_accuracy", "fix_offered_accuracy", "fix_verified"]
+    return {"suite": "search_explain", "config": {**_base_config(), "cases": len(rows)},
+            "metrics": {k: _mean(rows, k) for k in keys}, "details": details}
+
+
 SUITES = {
     "search": run_search_eval, "parse": run_parse_eval, "rag": run_rag_eval, "agent": run_agent_eval,
     "planner": run_planner_eval, "product_qa": run_product_qa_eval, "visual": run_visual_eval,
+    "purchase_check": run_purchase_check_eval, "negotiation": run_negotiation_eval, "listing_check": run_listing_check_eval,
+    "fit": run_fit_eval, "search_explain": run_search_explain_eval,
 }

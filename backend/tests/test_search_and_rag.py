@@ -81,12 +81,18 @@ def test_ingest_is_idempotent(knowledge):
     assert KnowledgeChunk.objects.count() == knowledge["chunks"]
 
 
-def test_ask_endpoint_returns_grounded_answer_with_citation(anon_client, knowledge, settings):
+def test_ask_endpoint_returns_grounded_answer_with_citation(anon_client, admin_user, client_for, knowledge, settings):
     settings.AI = {**settings.AI, "RAG_MIN_SIMILARITY": 0.0}  # threshold is calibrated for bge, not the test embedder
-    r = anon_client.post("/api/ai/ask/", {"question": "How long do refunds take for prepaid orders?"}, format="json")
-    assert r.status_code == 200
-    assert r.data["citations"] and r.data["citations"][0]["doc_slug"] == "returns"
+    question = {"question": "How long do refunds take for prepaid orders?"}
+    shopper = anon_client.post("/api/ai/ask/", question, format="json")
+    assert shopper.status_code == 200
+    assert shopper.data["citations"] and shopper.data["citations"][0]["doc_slug"] == "returns"
+    assert "retrieved" not in shopper.data  # what the search retrieved is shown to staff only
+    r = client_for(admin_user).post("/api/ai/ask/", question, format="json")
     assert r.data["retrieved"][0]["section"] == "Refund timelines"
+    top = r.data["retrieved"][0]
+    assert top["doc_title"] == r.data["citations"][0]["doc_title"] and top["cited"] is True  # shown as "used in the answer"
+    assert sum(p["cited"] for p in r.data["retrieved"]) == len(r.data["citations"])
 
 
 def test_ask_endpoint_declines_when_nothing_relevant(anon_client, knowledge, settings):

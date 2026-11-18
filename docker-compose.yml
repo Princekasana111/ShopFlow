@@ -28,9 +28,15 @@ services:
       DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,backend
       LLM_PROVIDER: ${LLM_PROVIDER:-auto}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # Optional local model (the `ollama` service below). Empty = off: the app uses Claude or the offline rules.
+      LOCAL_LLM_URL: ${LOCAL_LLM_URL:-}
+      LOCAL_LLM_MODEL: ${LOCAL_LLM_MODEL:-qwen2.5:3b}
     depends_on:
       db:
         condition: service_healthy
+      ollama:
+        condition: service_started
+        required: false
     ports:
       - "8000:8000"
     healthcheck:
@@ -38,6 +44,23 @@ services:
       interval: 5s
       timeout: 5s
       retries: 30
+
+  # Optional: a free local LLM (Ollama) used between Claude and the offline rules. Off unless the
+  # `local-llm` profile is on, e.g. COMPOSE_PROFILES=local-llm and LOCAL_LLM_URL=http://ollama:11434
+  # in .env. The first start downloads the model (about 2 GB) into the `ollama` volume.
+  ollama:
+    image: ollama/ollama:0.40.13
+    profiles: ["local-llm"]
+    environment:
+      OLLAMA_KEEP_ALIVE: 30m
+      OLLAMA_NUM_PARALLEL: "1"
+      LOCAL_LLM_MODEL: ${LOCAL_LLM_MODEL:-qwen2.5:3b}
+    entrypoint: ["/bin/sh", "/opt/shopflow/ollama-start.sh"]
+    volumes:
+      - ollama:/root/.ollama
+      - ./ollama/start.sh:/opt/shopflow/ollama-start.sh:ro
+    ports:
+      - "127.0.0.1:11434:11434"
 
   frontend:
     build: ./frontend
@@ -49,3 +72,4 @@ services:
 
 volumes:
   pgdata:
+  ollama:

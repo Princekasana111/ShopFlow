@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { CircleAlert, IndianRupee, ListChecks, Scale, Search, ShoppingCart, Sparkles, TriangleAlert, WandSparkles } from "lucide-react";
+import { Archive, CircleAlert, IndianRupee, ListChecks, Scale, Search, ShoppingCart, Sparkles, TriangleAlert, WandSparkles } from "lucide-react";
+import { aiBy } from "../ai.js";
 import { api, notifyCartChanged, rupees } from "../api.js";
 import { useAuth } from "../auth.jsx";
 import ProductArt from "../components/ProductArt.jsx";
@@ -22,6 +23,7 @@ export default function Planner() {
   const [loading, setLoading] = useState(false);
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState("");
+  const [skipOwned, setSkipOwned] = useState(true);
 
   const plan = async (text) => {
     const g = (text ?? goal).trim();
@@ -30,7 +32,7 @@ export default function Planner() {
     setLoading(true);
     setError("");
     try {
-      const data = await api("/api/ai/planner/", { method: "POST", body: { goal: g, budget: budget ? Number(budget) : null } });
+      const data = await api("/api/ai/planner/", { method: "POST", body: { goal: g, budget: budget ? Number(budget) : null, skip_owned: skipOwned } });
       setResult(data);
       setPicks(Object.fromEntries(data.items.map((item, i) => [i, item.product])));
     } catch (e) {
@@ -83,6 +85,12 @@ export default function Planner() {
             <div className="input-icon"><IndianRupee size={16} /><input className="input" inputMode="numeric" value={budget} onChange={(e) => setBudget(e.target.value.replace(/[^0-9]/g, ""))} placeholder="or mention it above" /></div>
           </label>
           <button className="btn primary lg" disabled={loading || goal.trim().length < 3}><Sparkles size={17} />{loading ? "Planning…" : "Plan my cart"}</button>
+          {user && (
+            <label className="check-inline">
+              <input type="checkbox" checked={skipOwned} onChange={(e) => setSkipOwned(e.target.checked)} />
+              Skip what I already own
+            </label>
+          )}
         </div>
         <div className="row" style={{ marginTop: 14, gap: 8 }}>
           {EXAMPLES.map((e) => <button type="button" key={e} className="chip" onClick={() => plan(e)}>{e}</button>)}
@@ -100,7 +108,7 @@ export default function Planner() {
                 <h2 style={{ margin: 0 }}>Your plan</h2>
                 <span className="muted small">{result.summary}</span>
               </div>
-              <span className="badge brand" title={result.planner.model}>Planned by {result.planner.provider === "anthropic" ? "Claude" : "offline rules"} · {result.latency_ms} ms</span>
+              <span className="badge brand" title={result.planner.model}>Planned by {aiBy(result.planner.provider)} · {result.latency_ms} ms</span>
             </div>
             <div className="budget-bar" style={{ marginTop: 16 }}>
               {budgetValue != null ? (
@@ -143,6 +151,20 @@ export default function Planner() {
             </div>
           )}
 
+          {result.owned?.length > 0 && (
+            <section className="card">
+              <h3 className="icon-text"><Archive size={18} />Already covered by what you own</h3>
+              <div className="skipped-list">
+                {result.owned.map((o, i) => (
+                  <div key={i} className="skipped-item">
+                    <span><strong>{o.need.label}</strong> <span className="muted">· you have {o.owned.name} ({o.owned.status === "DELIVERED" ? `since ${new Date(o.owned.since).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}` : "on the way"})</span></span>
+                    <Link to="/my-stuff" className="btn sm">My stuff</Link>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
           {result.skipped.length > 0 && (
             <section className="card">
               <h3>Left out</h3>
@@ -162,7 +184,7 @@ export default function Planner() {
               {user ? (
                 <button className="btn primary lg" onClick={addAll} disabled={adding}><ShoppingCart size={18} />{adding ? "Adding…" : `Add all ${result.items.length} to cart · ${rupees(total)}`}</button>
               ) : (
-                <Link className="btn primary lg" to="/login"><ShoppingCart size={18} />Log in to add these to your cart</Link>
+                <Link className="btn primary lg" to="/login" state={{ from: "/planner" }}><ShoppingCart size={18} />Log in to add these to your cart</Link>
               )}
             </div>
           )}

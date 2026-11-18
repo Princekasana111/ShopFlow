@@ -186,3 +186,36 @@ def intent_to_filters(intent: SearchIntent) -> SearchFilters:
         max_price=Decimal(str(intent.max_price)) if intent.max_price is not None else None,
         in_stock_only=intent.in_stock_only,
     )
+
+
+IGNORABLE = ("budget", "category", "stock")
+
+
+def plan_search(query: str, *, parse: bool = True, category: str | None = None, min_price: Decimal | None = None,
+                max_price: Decimal | None = None, in_stock: bool = False, ignore=(), user=None):
+    """The filters a search runs with: the parsed intent, overridden by explicit parameters, minus any
+    constraint the shopper chose to `ignore` ("budget", "category", "stock"), wherever it came from.
+
+    Shared by the search endpoint and "Why isn't this in my results?", so both see the same search.
+    Returns (intent or None, parser metadata or None, semantic query, SearchFilters).
+    """
+    intent, meta, semantic, filters = None, None, query, SearchFilters()
+    if parse and query:
+        intent, meta = parse_query(query, user=user)
+        filters = intent_to_filters(intent)
+        semantic = intent.semantic_query
+    if category:
+        filters.category = category
+    if min_price is not None:
+        filters.min_price = min_price
+    if max_price is not None:
+        filters.max_price = max_price
+    if in_stock:
+        filters.in_stock_only = True
+    if "budget" in ignore:
+        filters.min_price = filters.max_price = None
+    if "category" in ignore:
+        filters.category = None
+    if "stock" in ignore:
+        filters.in_stock_only = False
+    return intent, meta, semantic, filters

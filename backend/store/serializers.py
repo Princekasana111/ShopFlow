@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from .models import Cart, CartItem, Category, Order, OrderItem, OrderStatusEvent, Product, Review
 from .services import cart_items, cart_total
+from .sizes import product_sizes
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -15,13 +16,17 @@ class ProductListSerializer(serializers.ModelSerializer):
     avg_rating = serializers.FloatField(read_only=True, allow_null=True)
     review_count = serializers.IntegerField(read_only=True)
     short_description = serializers.SerializerMethodField()
+    sizes = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = [
             "id", "name", "slug", "brand", "price", "stock", "category",
-            "avg_rating", "review_count", "short_description",
+            "avg_rating", "review_count", "short_description", "sizes",
         ]
+
+    def get_sizes(self, obj) -> list[str]:
+        return product_sizes(obj)
 
     def get_short_description(self, obj) -> str:
         text = obj.description.strip()
@@ -49,17 +54,41 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
-        fields = ["id", "username", "rating", "title", "body", "is_flagged", "created_at"]
+        fields = ["id", "username", "rating", "title", "body", "size_bought", "fit", "is_flagged", "created_at"]
         read_only_fields = ["id", "username", "is_flagged", "created_at"]
+
+    def validate(self, attrs):
+        product = self.context.get("product")
+        size = (attrs.get("size_bought") or "").strip()
+        if product is not None:
+            sizes = product_sizes(product)
+            if not sizes and (size or attrs.get("fit")):
+                raise serializers.ValidationError("This product doesn't come in sizes.")
+            if size and size not in sizes:
+                raise serializers.ValidationError({"size_bought": f"Choose one of: {', '.join(sizes)}."})
+        attrs["size_bought"] = size
+        return attrs
 
 
 class CartItemSerializer(serializers.ModelSerializer):
     product = ProductListSerializer(read_only=True)
+    unit_price = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
     line_total = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+    deal = serializers.SerializerMethodField()
 
     class Meta:
         model = CartItem
-        fields = ["id", "product", "quantity", "line_total"]
+        fields = ["id", "product", "quantity", "size", "unit_price", "line_total", "deal"]
+
+    def get_deal(self, item) -> dict | None:
+        """A "Make an offer" price on this line; `expired` means it no longer applies."""
+        if item.offer_id is None:
+            return None
+        offer = item.offer
+        return {"offer_id": offer.pk, "price": f"{offer.deal_price:.2f}" if offer.deal_price is not None else None,
+                "expires_at": offer.expires_at.isoformat() if offer.expires_at else None, "expired": item.deal is None,
+                # a price cut below the deal: the shopper pays the lower list price instead
+                "beaten": item.deal is not None and item.product.price < offer.deal_price}
 
 
 class CartSerializer(serializers.ModelSerializer):
@@ -84,10 +113,17 @@ class CartSerializer(serializers.ModelSerializer):
 class AddCartItemSerializer(serializers.Serializer):
     product_id = serializers.IntegerField(min_value=1)
     quantity = serializers.IntegerField(min_value=1, max_value=10, default=1)
+    size = serializers.CharField(max_length=20, required=False, allow_blank=True)
 
 
 class UpdateCartItemSerializer(serializers.Serializer):
-    quantity = serializers.IntegerField(min_value=0, max_value=10)
+    quantity = serializers.IntegerField(min_value=0, max_value=10, required=False)
+    size = serializers.CharField(max_length=20, required=False, allow_blank=True)
+
+    def validate(self, attrs):
+        if "quantity" not in attrs and "size" not in attrs:
+            raise serializers.ValidationError("Send a quantity, a size, or both.")
+        return attrs
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -96,7 +132,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderItem
-        fields = ["id", "product", "product_name", "category", "unit_price", "quantity", "line_total"]
+        fields = ["id", "product", "product_name", "category", "unit_price", "quantity", "size", "line_total"]
 
     def get_category(self, item) -> str | None:
         return item.product.category.name if item.product_id else None

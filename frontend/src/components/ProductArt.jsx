@@ -1,19 +1,22 @@
-// Illustrated product art: no stock photos, so each product gets a category-tinted tile with
-// an icon picked from its name. New products added by an admin get a sensible icon too.
+// Product art: a CC0 product photo when one exists (PRODUCT_IMAGES, keyed by product name), otherwise
+// an illustrated tile: the category colour with an icon picked from the name. A product added in
+// the admin, or renamed, has no photo yet, so it still gets a sensible illustrated tile.
 import {
   Activity, BatteryCharging, BedDouble, Bike, Blinds, BookOpen, Bot, Brain, Briefcase, ChefHat, CloudRain, Code,
   Coffee, CookingPot, Cpu, Dumbbell, Feather, Footprints, GlassWater, Headphones, HeartPulse, House, Keyboard,
   LampDesk, Leaf, Microwave, Monitor, Moon, Mountain, Mouse, PersonStanding, PlugZap, Rocket, Shirt, Snowflake,
   Sparkles, Speaker, Sun, Timer, Trophy, Umbrella, UtensilsCrossed, Volleyball, Wallet, Watch, Waves, Webcam, Zap,
 } from "lucide-react";
+import { PRODUCT_IMAGES } from "./productImages.js";
 
+// `image` is a CC0 photo for the category tile (public/categories/, credits in docs/IMAGE_CREDITS.md).
 export const CATEGORIES = {
-  electronics: { name: "Electronics", color: "#4f46e5", icon: Cpu },
-  footwear: { name: "Footwear", color: "#ea580c", icon: Footprints },
-  clothing: { name: "Clothing", color: "#db2777", icon: Shirt },
-  "home-kitchen": { name: "Home & Kitchen", color: "#0d9488", icon: House },
-  books: { name: "Books", color: "#b45309", icon: BookOpen },
-  "sports-fitness": { name: "Sports & Fitness", color: "#16a34a", icon: Dumbbell },
+  electronics: { name: "Electronics", color: "#2f6bd8", icon: Cpu, image: "/categories/electronics.webp" },
+  footwear: { name: "Footwear", color: "#d9581f", icon: Footprints, image: "/categories/footwear.webp" },
+  clothing: { name: "Clothing", color: "#c43c78", icon: Shirt, image: "/categories/clothing.webp" },
+  "home-kitchen": { name: "Home & Kitchen", color: "#11907f", icon: House, image: "/categories/home-kitchen.webp" },
+  books: { name: "Books", color: "#b8740c", icon: BookOpen, image: "/categories/books.webp" },
+  "sports-fitness": { name: "Sports & Fitness", color: "#3f9a3a", icon: Dumbbell, image: "/categories/sports-fitness.webp" },
 };
 const SLUG_BY_NAME = Object.fromEntries(Object.entries(CATEGORIES).map(([slug, c]) => [c.name, slug]));
 
@@ -45,8 +48,16 @@ export function iconFor(product) {
 }
 
 export default function ProductArt({ product, size = "md", className = "" }) {
-  const Icon = iconFor(product);
   const color = CATEGORIES[categoryOf(product)].color;
+  const photo = PRODUCT_IMAGES[product?.name || product?.product_name || ""];
+  if (photo) {
+    return (
+      <div className={`art photo ${size === "sm" ? "sm" : ""} ${className}`} style={{ "--c": color }} aria-hidden="true">
+        <img src={photo} alt="" width="800" height="600" loading="lazy" decoding="async" />
+      </div>
+    );
+  }
+  const Icon = iconFor(product);
   return (
     <div className={`art ${size === "sm" ? "sm" : ""} ${className}`} style={{ "--c": color }} aria-hidden="true">
       <Icon strokeWidth={1.6} />

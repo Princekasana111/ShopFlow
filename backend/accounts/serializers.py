@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
+from .models import ShopperProfile
+
 User = get_user_model()
 
 
@@ -32,3 +34,22 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)
+
+
+class ShopperProfileSerializer(serializers.ModelSerializer):
+    needs = serializers.CharField(max_length=500, required=False, allow_blank=True)
+
+    class Meta:
+        model = ShopperProfile
+        fields = ["shoe_size_uk", "clothing_size", "waist_in", "needs", "updated_at"]
+        read_only_fields = ["updated_at"]
+
+    def validate_needs(self, value):
+        from ai import guardrails  # the purchase check sends this text to the LLM
+
+        value = value.strip()
+        if value:
+            check = guardrails.check_user_message(value)
+            if not check.allowed:
+                raise serializers.ValidationError(check.reply)
+        return value

@@ -181,9 +181,10 @@ def clip_rank(image: Image.Image, limit: int = 20) -> list[tuple[int, float]]:
 
 
 def understand_photo(image: Image.Image, user=None) -> tuple[VisualQuery | None, dict]:
-    """Claude vision -> structured query. Returns (None, meta) when no live LLM is available."""
+    """Claude vision -> structured query. Returns (None, meta) when no model that can see is available
+    (the local model has no vision, so photo search then uses CLIP alone)."""
     llm = get_llm()
-    if not llm.is_live:
+    if not llm.supports_vision:
         return None, {"provider": llm.name, "model": llm.model}
     small = image.copy()
     small.thumbnail((CLAUDE_MAX_SIDE, CLAUDE_MAX_SIDE))

@@ -119,7 +119,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         if request.method == "GET":
             reviews = product.reviews.select_related("user").filter(is_flagged=False)
             return Response(ReviewSerializer(reviews, many=True).data)
-        serializer = ReviewSerializer(data=request.data)
+        serializer = ReviewSerializer(data=request.data, context={"product": product})
         serializer.is_valid(raise_exception=True)
         try:
             review = serializer.save(product=product, user=request.user)
@@ -151,7 +151,7 @@ class CartView(APIView):
 
 
 class CartItemView(APIView):
-    """PATCH to change a line's quantity (0 removes it), DELETE to remove it."""
+    """PATCH to change a line's quantity (0 removes it) and/or size, DELETE to remove it."""
 
     permission_classes = [permissions.IsAuthenticated]
 
@@ -159,7 +159,7 @@ class CartItemView(APIView):
         serializer = UpdateCartItemSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
-            services.set_cart_quantity(request.user, product_id, serializer.validated_data["quantity"])
+            services.update_cart_line(request.user, product_id, **serializer.validated_data)
         except services.CartError as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(CartSerializer(services.get_cart(request.user)).data)

@@ -83,10 +83,21 @@ class ParseResult(Generic[T]):
     provider: str = ""
 
 
+class LLMBusy(LLMError):
+    """The provider is busy with another request; the next provider should answer this one.
+    Unlike other errors it doesn't mean the provider is down, so it doesn't start a cool-down."""
+
+
 class LLMProvider(ABC):
     name: str = "base"
     model: str = ""
     is_live: bool = False
+    supports_vision: bool = False  # can read images (photo search)
+    supports_agent: bool = True    # can run the shopping assistant's tool-use loop
+
+    def handles(self, feature: str) -> bool:
+        """Whether this provider should answer `feature` (a parse() feature name) at all."""
+        return self.is_live
 
     # ---- public API (instrumented) -------------------------------------------------
 
@@ -135,6 +146,8 @@ class LLMProvider(ABC):
                 system=system, messages=messages, schema=schema, offline=offline,
                 max_tokens=max_tokens, effort=effort, model=model,
             )
+        except LLMBusy:
+            raise  # not a failure: nothing was sent, so nothing to log
         except Exception as exc:
             self._record(feature, user, started, error=exc, model=model)
             raise

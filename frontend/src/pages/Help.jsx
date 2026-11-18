@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { CircleAlert, FileText, LifeBuoy, RotateCcw, Search, ShieldCheck, Sparkles, Truck, Wallet } from "lucide-react";
 import { api } from "../api.js";
+import { useAuth } from "../auth.jsx";
 
 const TOPICS = [
   { icon: Truck, title: "Shipping", questions: ["Is shipping free?", "How long does delivery take to Pune?"] },
@@ -10,6 +12,7 @@ const TOPICS = [
 ];
 
 export default function Help() {
+  const { user } = useAuth();
   const [question, setQuestion] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -29,6 +32,13 @@ export default function Help() {
       setLoading(false);
     }
   };
+
+  // /help?q=... asks that question straight away (used by the footer's help links).
+  const [params] = useSearchParams();
+  const linked = params.get("q");
+  useEffect(() => {
+    if (linked) ask(linked);
+  }, [linked]);
 
   return (
     <>
@@ -55,7 +65,7 @@ export default function Help() {
               <span className="icon-tile"><Sparkles size={19} /></span>
               <div><h2>Answer</h2><span className="muted small">{result.question}</span></div>
             </div>
-            <span className="badge brand" title={result.model}>{result.provider === "anthropic" ? `Claude · ${result.model}` : "Offline extractive"}</span>
+            <span className="badge brand" title={result.model}>{result.provider === "anthropic" ? `Claude · ${result.model}` : result.provider === "local" ? `Local AI · ${result.model}` : "Quoted from our policies (offline)"}</span>
           </div>
           <p className="answer-text" style={{ marginTop: 14 }}>{result.answer}</p>
           {result.citations.length > 0 && (
@@ -72,15 +82,28 @@ export default function Help() {
               ))}
             </div>
           )}
-          <details className="small" style={{ marginTop: 16 }}>
-            <summary className="muted">Retrieved passages (hybrid search)</summary>
-            <div className="table-wrap" style={{ marginTop: 10 }}>
+          {/* Staff only: shoppers get the answer and its sources; staff can see what the search retrieved. */}
+          {user?.is_staff && <details className="small passages" style={{ marginTop: 16 }}>
+            <summary className="muted">Staff view: how this answer was found</summary>
+            <p className="muted" style={{ margin: "10px 0 8px" }}>
+              We searched our policy documents for the passages closest to your question, by meaning and by exact words.
+              The answer may only use these passages; the ones it quotes are marked.
+            </p>
+            <div className="table-wrap">
               <table className="data">
-                <thead><tr><th>Document</th><th>Section</th><th className="num">Cosine similarity</th></tr></thead>
-                <tbody>{result.retrieved.map((r, i) => <tr key={i}><td>{r.doc_slug}</td><td>{r.section}</td><td className="num">{r.similarity}</td></tr>)}</tbody>
+                <thead><tr><th>Policy</th><th>Section</th><th title="How close each passage is in meaning to your question (cosine similarity, 0 to 1)">Match</th></tr></thead>
+                <tbody>{result.retrieved.map((r, i) => (
+                  <tr key={i}>
+                    <td>{r.doc_title || r.doc_slug}</td>
+                    <td>{r.section}{r.cited && <span className="badge brand" style={{ marginLeft: 8 }}>Used in the answer</span>}</td>
+                    <td title={`Similarity ${Number(r.similarity).toFixed(2)} (0 to 1)`}>
+                      <span className="match-bar" aria-label={`Match ${Math.round(Math.max(0, r.similarity) * 100)} out of 100`}><span style={{ width: `${Math.round(Math.max(0, r.similarity) * 100)}%` }} /></span>
+                    </td>
+                  </tr>
+                ))}</tbody>
               </table>
             </div>
-          </details>
+          </details>}
         </section>
       )}
 

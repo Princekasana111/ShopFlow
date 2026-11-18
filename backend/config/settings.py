@@ -124,11 +124,16 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 CORS_ALLOWED_ORIGINS = env_list("CORS_ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000")
 
+# AI results (search parses, listing checks, fit readings, product-Q&A vectors...) are cached in
+# Postgres, so every server process shares them and they survive restarts; `createcachetable` runs in
+# the container entrypoint. CACHE_BACKEND=locmem keeps them in memory instead (the tests set CACHES
+# to an in-memory cache directly in settings_test.py).
 CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-        "LOCATION": "shopflow",
-    }
+    "default": (
+        {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": "shopflow"}
+        if env("CACHE_BACKEND", "database") == "locmem"
+        else {"BACKEND": "django.core.cache.backends.db.DatabaseCache", "LOCATION": "shopflow_cache"}
+    )
 }
 
 REST_FRAMEWORK = {
@@ -161,8 +166,9 @@ SPECTACULAR_SETTINGS = {
 # GenAI configuration
 # ---------------------------------------------------------------------------
 AI = {
-    # "auto" uses Claude when ANTHROPIC_API_KEY is set, otherwise the offline rule-based provider.
-    # "anthropic" forces Claude (credentials can also come from an `ant auth login` profile).
+    # "auto" uses Claude when ANTHROPIC_API_KEY is set, else the local model when LOCAL_LLM_URL is set,
+    # else the offline rule-based provider. "anthropic" forces Claude (credentials can also come from an
+    # `ant auth login` profile); "local" forces the local model; "offline" forces the rules.
     "LLM_PROVIDER": env("LLM_PROVIDER", "auto"),
     "ANTHROPIC_MODEL": env("ANTHROPIC_MODEL", "claude-opus-5-5"),
     # Server-side refusal fallbacks (beta). On a safety-classifier decline the API retries on a
@@ -214,6 +220,25 @@ AI = {
     "ASSISTANT_MAX_TOOL_ROUNDS": int(env("AI_ASSISTANT_MAX_TOOL_ROUNDS", "6")),
     "ASSISTANT_MAX_MESSAGES": int(env("AI_ASSISTANT_MAX_MESSAGES", "60")),
     "MAX_INPUT_CHARS": int(env("AI_MAX_INPUT_CHARS", "1000")),
+    # Optional free local model served by Ollama (docker compose profile `local-llm`). Empty URL = off.
+    # It answers only the features listed here, never images or the assistant's tool loop, and falls
+    # back to the offline rules on any failure. The default list is where Qwen2.5 3B beat the offline
+    # rules on the eval suites and every answer cites its sources: the help center and Ask this product.
+    # Everywhere else the rules scored higher, or (bargaining replies) the model sometimes implied a deal
+    # that code hadn't made; see the README.
+    "LOCAL_LLM_URL": env("LOCAL_LLM_URL", ""),
+    "LOCAL_LLM_MODEL": env("LOCAL_LLM_MODEL", "qwen2.5:3b"),
+    "LOCAL_LLM_FEATURES": [f.strip() for f in env("LOCAL_LLM_FEATURES", "rag_answer,product_qa").split(",") if f.strip()],
+    "LOCAL_LLM_TIMEOUT_SECONDS": float(env("LOCAL_LLM_TIMEOUT_SECONDS", "60")),
+    "LOCAL_LLM_MAX_TOKENS": int(env("LOCAL_LLM_MAX_TOKENS", "1024")),
+    "LOCAL_LLM_COOLDOWN_SECONDS": float(env("LOCAL_LLM_COOLDOWN_SECONDS", "60")),
+    # "Make an offer" (ai.negotiation). The default floor is the list price minus OFFER_MAX_DISCOUNT
+    # (a product's floor_price overrides it); the seller reaches the floor after OFFER_ROUNDS concessions.
+    "OFFER_MAX_DISCOUNT": float(env("AI_OFFER_MAX_DISCOUNT", "0.12")),
+    "OFFER_MIN_PRICE": int(env("AI_OFFER_MIN_PRICE", "500")),  # cheaper products have a fixed price
+    "OFFER_ROUNDS": int(env("AI_OFFER_ROUNDS", "5")),
+    "OFFER_DEAL_MINUTES": int(env("AI_OFFER_DEAL_MINUTES", "30")),  # how long an agreed price is held
+    "OFFER_DAILY_LIMIT": int(env("AI_OFFER_DAILY_LIMIT", "5")),  # bargaining chats per product per shopper per day
     # Model used as the LLM-as-judge in evals (only runs when a live LLM is configured).
     "EVAL_JUDGE_MODEL": env("EVAL_JUDGE_MODEL", "claude-opus-5-5"),
 }

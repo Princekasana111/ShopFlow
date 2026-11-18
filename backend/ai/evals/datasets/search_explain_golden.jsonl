@@ -1,0 +1,16 @@
+{"query": "running shoes under 3000", "product": "stride-aqua-waterproof-running-shoes", "params": {}, "expect": {"status": "filtered", "reason": "over_budget", "fix": true}}
+{"query": "insulated flask under 1000", "product": "thermosteel-insulated-flask-1l", "params": {}, "expect": {"status": "filtered", "reason": "over_budget", "fix": true}}
+{"query": "headphones under 5000", "product": "aurora-anc-wireless-headphones", "params": {}, "expect": {"status": "filtered", "reason": "over_budget", "fix": true}}
+{"query": "cheap earbuds under 2000", "product": "pulse-true-wireless-earbuds", "params": {}, "expect": {"status": "filtered", "reason": "over_budget", "fix": true}}
+{"query": "65w charger in stock", "product": "chargeduo-65w-gan-charger", "params": {}, "expect": {"status": "filtered", "reason": "out_of_stock", "fix": true}}
+{"query": "novel in stock", "product": "midnight-at-the-haveli", "params": {}, "expect": {"status": "filtered", "reason": "out_of_stock", "fix": true}}
+{"query": "waterproof jacket", "product": "packable-rain-jacket", "params": {"category": "footwear"}, "expect": {"status": "filtered", "reason": "category", "fix": true}}
+{"query": "yoga mat", "product": "lumen-24-inch-ips-monitor", "params": {}, "expect": {"status": "filtered", "reason": "category", "fix": false}}
+{"query": "rain jacket", "product": "stride-aqua-waterproof-running-shoes", "params": {}, "expect": {"status": "filtered", "reason": "category", "fix": true}}
+{"query": "noise cancelling headphones", "product": "aurora-anc-wireless-headphones", "params": {}, "expect": {"status": "shown", "reason": null, "fix": false}}
+{"query": "something to keep my coffee hot for hours", "product": "thermosteel-insulated-flask-1l", "params": {}, "expect": {"status": "shown", "reason": null, "fix": false}}
+{"query": "gift for someone learning to code", "product": "lumen-24-inch-ips-monitor", "params": {}, "expect": {"status": "ranked_low", "reason": "ranked_low", "fix": true}}
+{"query": "present for my dad", "product": "classic-leather-oxford-shoes", "params": {}, "expect": {"status": "ranked_low", "reason": "ranked_low", "fix": true}}
+{"query": "gift for someone learning to code", "product": "volt-20000mah-power-bank", "params": {}, "expect": {"status": "ranked_low", "reason": "ranked_low", "fix": false}}
+{"query": "drink bottle", "product": "thermosteel-insulated-flask-1l", "params": {"mode": "keyword"}, "expect": {"status": "not_matched", "reason": "no_match", "fix": true}}
+{"query": "music on the go", "product": "boombox-mini-bluetooth-speaker", "params": {"mode": "keyword"}, "expect": {"status": "not_matched", "reason": "no_match", "fix": true}}

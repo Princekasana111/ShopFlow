@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Bot, CircleAlert, LifeBuoy, ShoppingBag, Sparkles, UserRound } from "lucide-react";
 import { useAuth } from "../auth.jsx";
 
 function SidePanel({ title }) {
   return (
     <aside className="auth-side">
-      <span className="brand" style={{ color: "#fff" }}><span className="logo-mark" style={{ background: "rgba(255,255,255,0.18)" }}><ShoppingBag size={18} /></span>ShopFlow</span>
+      <span className="brand" style={{ color: "#fff" }}><span className="logo-mark" style={{ background: "rgba(255,255,255,0.18)", color: "#fff" }}><ShoppingBag size={18} /></span>ShopFlow</span>
       <h2>{title}</h2>
       <ul>
         <li><span className="icon-tile"><Sparkles size={17} /></span><span><strong>AI search</strong><br />Describe what you need, budget included.</span></li>
@@ -17,9 +17,24 @@ function SidePanel({ title }) {
   );
 }
 
+// Where a shopper was going when we asked them to log in, in words ("your cart").
+function destination(from) {
+  if (!from) return "";
+  const names = { "/cart": "your cart", "/orders": "your orders", "/my-stuff": "My stuff", "/my-offers": "My offers", "/planner": "your plan", "/ai-admin": "AI admin" };
+  return names[from.split("?")[0]] || (from.startsWith("/products/") ? "this product" : "that page");
+}
+
+/** After logging in (or signing up), go back to where the shopper was going. */
+function useReturnTo() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const from = location.state?.from;
+  return { from, state: location.state, done: () => navigate(from && from.startsWith("/") && !from.startsWith("//") ? from : "/", { replace: true }) };
+}
+
 export function Login() {
   const { login } = useAuth();
-  const navigate = useNavigate();
+  const back = useReturnTo();
   const [form, setForm] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -28,7 +43,7 @@ export function Login() {
     setBusy(true);
     try {
       await login(creds.username, creds.password);
-      navigate("/");
+      back.done();
     } catch {
       setError("Wrong username or password.");
     } finally {
@@ -40,7 +55,7 @@ export function Login() {
       <SidePanel title="Welcome back" />
       <form className="auth-form" onSubmit={(e) => { e.preventDefault(); submit(); }}>
         <h1>Log in</h1>
-        <p className="muted">Good to see you again.</p>
+        {back.from ? <p className="notice small">Log in to continue to {destination(back.from)}.</p> : <p className="muted">Good to see you again.</p>}
         <label className="field">Username<input className="input" autoComplete="username" required value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} /></label>
         <label className="field">Password<input className="input" type="password" autoComplete="current-password" required value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
         {error && <p className="error" style={{ marginBottom: 14 }}><CircleAlert size={18} />{error}</p>}
@@ -50,7 +65,7 @@ export function Login() {
           <button type="button" className="btn" style={{ flex: 1 }} onClick={() => submit({ username: "demo", password: "demo12345" })}><UserRound size={16} />Customer demo</button>
           <button type="button" className="btn" style={{ flex: 1 }} onClick={() => submit({ username: "admin", password: "admin12345" })}><UserRound size={16} />Staff demo</button>
         </div>
-        <p className="small" style={{ marginTop: 18 }}>New here? <Link to="/register">Create an account</Link></p>
+        <p className="small" style={{ marginTop: 18 }}>New here? <Link to="/register" state={back.state}>Create an account</Link></p>
       </form>
     </div>
   );
@@ -58,7 +73,7 @@ export function Login() {
 
 export function Register() {
   const { register } = useAuth();
-  const navigate = useNavigate();
+  const back = useReturnTo();
   const [form, setForm] = useState({ username: "", email: "", password: "" });
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -68,7 +83,7 @@ export function Register() {
     setBusy(true);
     try {
       await register(form);
-      navigate("/");
+      back.done();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -86,7 +101,7 @@ export function Register() {
         <label className="field">Password<input className="input" type="password" autoComplete="new-password" minLength={8} required value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
         {error && <p className="error" style={{ marginBottom: 14 }}><CircleAlert size={18} />{error}</p>}
         <button className="btn primary lg block" disabled={busy}>{busy ? "Creating account…" : "Sign up"}</button>
-        <p className="small" style={{ marginTop: 18 }}>Already have an account? <Link to="/login">Log in</Link></p>
+        <p className="small" style={{ marginTop: 18 }}>Already have an account? <Link to="/login" state={back.state}>Log in</Link></p>
       </form>
     </div>
   );

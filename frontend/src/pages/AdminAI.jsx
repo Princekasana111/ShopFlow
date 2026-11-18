@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import {
-  Activity, CircleAlert, CircleCheck, CircleX, Coins, Database, ExternalLink, FlaskConical, Gauge, Package,
-  ShieldAlert, Sparkles, TriangleAlert, WandSparkles, Zap,
+  Activity, CircleAlert, CircleCheck, CircleX, Coins, Cpu, Database, ExternalLink, FlaskConical, Gauge, Handshake, Package, Power,
+  Scale, ShieldAlert, Sparkles, TriangleAlert, WandSparkles, Zap,
 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { featureList } from "../ai.js";
 import { api } from "../api.js";
 import { EmptyState, toast } from "../components/ui.jsx";
 import { OrderCard } from "./Orders.jsx";
@@ -50,6 +52,59 @@ function EvalSummary({ suite, run }) {
   );
 }
 
+/** Staff switch for the free local model: on for everyone, or off (the offline rules answer instead). */
+function LocalModelSwitch() {
+  const [state, setState] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState("");
+  useEffect(() => { api("/api/ai/local-model/").then(setState).catch(() => setState({ configured: false })); }, []);
+  if (!state) return <div className="skeleton" style={{ height: 96 }} />;
+
+  const flip = async () => {
+    setBusy(true);
+    try {
+      const next = await api("/api/ai/local-model/", { method: "POST", body: { on: !state.on } });
+      setState(next);
+      setNote(next.note || (next.on ? "Turned on. The model is loading into memory, so the first answer can take up to a minute; after that, about 10 seconds." : "Turned off. Shoppers get the offline rules, and the model was unloaded to free memory."));
+      toast(next.on ? "Local AI model turned on" : "Local AI model turned off");
+      window.dispatchEvent(new Event("ai-status-changed"));
+    } catch (e) {
+      toast(e.message, "error");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const features = featureList(state.features);
+  return (
+    <section className="card local-switch">
+      <div className="card-title" style={{ margin: 0 }}>
+        <span className="icon-tile"><Cpu size={18} /></span>
+        <div style={{ minWidth: 0 }}>
+          <h2>Local AI model</h2>
+          <span className="muted small">
+            {state.configured
+              ? `${state.model}, free, running on this server. When on, it writes ${features}; everything else uses the offline rules.`
+              : "Not set up on this server. Add COMPOSE_PROFILES=local-llm and LOCAL_LLM_URL=http://ollama:11434 to .env (see the README)."}
+          </span>
+        </div>
+        {state.configured && (
+          <div className="row" style={{ gap: 10 }}>
+            <span className={`pc-pill ${state.on ? (state.ready ? "pass" : "warn") : "skip"}`}>
+              {state.on ? (state.ready ? <><CircleCheck size={14} />On</> : <><CircleAlert size={14} />On, not reachable</>) : <><Power size={14} />Off</>}
+            </span>
+            <button className={`btn ${state.on ? "" : "primary"}`} onClick={flip} disabled={busy} aria-pressed={state.on}>
+              <Power size={16} />{busy ? "…" : state.on ? "Turn off" : "Turn on"}
+            </button>
+          </div>
+        )}
+      </div>
+      {state.configured && state.on && !state.ready && <p className="small" style={{ margin: "10px 0 0" }}>Ollama isn't answering right now, so shoppers get the offline rules until it is. Nothing breaks.</p>}
+      {note && <p className="muted small" style={{ margin: "10px 0 0" }}>{note}</p>}
+    </section>
+  );
+}
+
 function Observability() {
   const [days, setDays] = useState(7);
   const [data, setData] = useState(null);
@@ -63,6 +118,7 @@ function Observability() {
   const maxCalls = Math.max(1, ...data.by_feature.map((f) => f.calls));
   return (
     <div className="stack">
+      <LocalModelSwitch />
       <div className="segmented" role="tablist" aria-label="Time window">
         {[1, 7, 30].map((d) => <button key={d} className={days === d ? "active" : ""} onClick={() => setDays(d)}>Last {d} day{d > 1 ? "s" : ""}</button>)}
       </div>
@@ -106,8 +162,17 @@ function Observability() {
             ))}</tbody></table>
           )}
           <p className="muted small" style={{ margin: "14px 0 0" }}>Blocked prompt injections, flagged reviews, prices the model wrote that were not in tool results, invalid tool inputs and runaway tool loops.</p>
+          <div className="card-title" style={{ marginTop: 22 }}><span className="icon-tile"><Handshake size={18} /></span><h2>Make an offer</h2></div>
+          <table className="data"><tbody>
+            <tr><td>Bargaining chats</td><td className="num"><strong>{fmt(data.offers.chats)}</strong></td></tr>
+            <tr><td>Deals agreed</td><td className="num"><strong>{fmt(data.offers.deals)}</strong> ({fmt(data.offers.used)} ordered)</td></tr>
+            <tr><td>Average discount</td><td className="num"><strong>{data.offers.avg_discount_pct == null ? "—" : `${data.offers.avg_discount_pct}%`}</strong></td></tr>
+            <tr><td>Deals below today's floor</td><td className="num"><strong>{fmt(data.offers.below_floor)}</strong></td></tr>
+          </tbody></table>
         </section>
       </div>
+
+      <ListingIssues />
 
       <section>
         <h2 style={{ marginBottom: 12 }}>Latest eval runs</h2>
@@ -136,6 +201,36 @@ function Observability() {
         </div>
       </section>
     </div>
+  );
+}
+
+const VERDICT_LABEL = { contradicted: ["", TriangleAlert, "Reviews disagree"], disputed: ["", Scale, "Mixed reports"] };
+
+function ListingIssues() {
+  const [rows, setRows] = useState(null);
+  const [error, setError] = useState("");
+  useEffect(() => { api("/api/ai/listing-issues/").then(setRows).catch((e) => { setError(e.message); setRows([]); }); }, []);
+  return (
+    <section className="card">
+      <div className="card-title"><span className="icon-tile"><Scale size={18} /></span><div><h2>Listing vs reviews</h2><span className="muted small">Listing claims that customer reviews dispute, across the catalog</span></div></div>
+      {error ? <p className="error"><CircleAlert size={18} />Couldn't load the listing check: {error}</p>
+        : !rows ? <div className="skeleton" style={{ height: 120 }} /> : rows.length === 0 ? <p className="muted">No disputed claims.</p> : (
+        <div className="table-wrap">
+          <table className="data">
+            <thead><tr><th>Product</th><th>Claim</th><th>Listing says</th><th>Verdict</th><th className="num">Against / for</th></tr></thead>
+            <tbody>{rows.map((r) => {
+              const [, Icon, label] = VERDICT_LABEL[r.verdict];
+              return (
+                <tr key={`${r.product_id}-${r.topic}-${r.label}`}>
+                  <td><Link to={`/products/${r.product_id}`}>{r.product}</Link></td><td>{r.label}</td><td className="muted small">“{r.listing_quote}”</td>
+                  <td><span className="icon-text"><Icon size={14} />{label}</span></td><td className="num">{r.counts.contradicting} / {r.counts.supporting}</td>
+                </tr>
+              );
+            })}</tbody>
+          </table>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -196,7 +291,7 @@ function Copywriter() {
       {busy && <div className="skeleton" style={{ height: 380 }} />}
       {result && !busy && (
         <section className="card insights copy-out">
-          <div className="row spread"><h2 style={{ margin: 0 }}>{result.copy.headline}</h2><span className="badge brand">{result.provider === "anthropic" ? `Claude · ${result.model}` : "Offline template"}</span></div>
+          <div className="row spread"><h2 style={{ margin: 0 }}>{result.copy.headline}</h2><span className="badge brand">{result.provider === "anthropic" ? `Claude · ${result.model}` : result.provider === "local" ? `Local AI · ${result.model}` : "Offline template"}</span></div>
           {result.warnings.map((w, i) => <p key={i} className="warn-note" style={{ marginTop: 10 }}><TriangleAlert size={15} />{w}</p>)}
           <p style={{ marginTop: 12 }}>{result.copy.description}</p>
           <h3>Highlights</h3>

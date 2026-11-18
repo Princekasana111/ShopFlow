@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Bot, Camera, CircleAlert, IndianRupee, LayoutGrid, PackageCheck, Search, SearchX, Sparkles, Tag, TriangleAlert, WandSparkles, X } from "lucide-react";
+import { Bot, Camera, CircleAlert, IndianRupee, LayoutGrid, PackageCheck, RotateCcw, Search, SearchCheck, SearchX, Sparkles, Tag, TriangleAlert, WandSparkles, X } from "lucide-react";
+import { aiBy } from "../ai.js";
 import { api, rupees, upload } from "../api.js";
 import ProductArt, { CATEGORIES } from "../components/ProductArt.jsx";
 import ProductCard from "../components/ProductCard.jsx";
 import { EmptyState, SkeletonGrid } from "../components/ui.jsx";
+import WhyNotHere from "../components/WhyNotHere.jsx";
 
 const EXAMPLES = [
   "something to keep my coffee hot for hours",
@@ -12,6 +14,18 @@ const EXAMPLES = [
   "gift for someone learning to code",
   "in stock earbuds under 3k",
 ];
+
+/** A filter the search read from your words. Click to drop it (or to put it back). */
+function FilterChip({ kind, ignored, onToggle, icon: Icon, children }) {
+  const off = ignored.includes(kind);
+  const what = { category: "category", budget: "price limit", stock: "in-stock filter" }[kind];
+  return (
+    <button type="button" className={`chip filter-chip ${off ? "ignored" : ""}`} onClick={() => onToggle(kind)}
+      title={off ? `Use the ${what} again` : `Search without the ${what}`} aria-pressed={!off}>
+      <Icon size={13} />{children}{off ? <RotateCcw size={13} aria-label={`Use the ${what} again`} /> : <X size={13} aria-label={`Remove the ${what}`} />}
+    </button>
+  );
+}
 
 function SearchForm({ draft, setDraft, mode, onMode, onSubmit, onPhoto }) {
   return (
@@ -22,8 +36,8 @@ function SearchForm({ draft, setDraft, mode, onMode, onSubmit, onPhoto }) {
       </div>
       <select className="input" value={mode} onChange={(e) => onMode(e.target.value)} aria-label="Search mode">
         <option value="hybrid">Hybrid AI</option>
-        <option value="vector">Semantic</option>
-        <option value="keyword">Keyword</option>
+        <option value="vector">By meaning</option>
+        <option value="keyword">Exact words</option>
       </select>
       <label className="btn icon-only" title="Search by photo" aria-label="Search by photo">
         <Camera size={18} />
@@ -40,6 +54,10 @@ export default function Shop() {
   const mode = params.get("mode") || "hybrid";
   const category = params.get("category") || "";
   const ordering = params.get("ordering") || "rating";
+  // Set by a "Why isn't it here?" fix: parsed constraints to drop, and a longer result list.
+  const ignore = params.get("ignore") || "";
+  const limit = params.get("limit") || "";
+  const [explaining, setExplaining] = useState(false);
   const [draft, setDraft] = useState(q);
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
@@ -69,13 +87,17 @@ export default function Shop() {
     setLoading(true);
     setError("");
     const request = q
-      ? api("/api/ai/search/", { query: { q, mode, category } })
+      ? api("/api/ai/search/", { query: { q, mode, category, ignore, limit } })
       : api("/api/products/", { query: { category, ordering, page_size: 60 } }).then((r) => ({ results: r.results, count: r.count }));
     request.then(setData).catch((e) => setError(e.message)).finally(() => setLoading(false));
-  }, [q, mode, category, ordering]);
+  }, [q, mode, category, ordering, ignore, limit]);
+
+  const ignored = ignore ? ignore.split(",") : [];
+  const toggleIgnore = (kind) => update({ ignore: (ignored.includes(kind) ? ignored.filter((k) => k !== kind) : [...ignored, kind]).join(",") });
 
   const update = (next) => {
-    const merged = { q, mode, category, ordering, ...next };
+    const fresh = next.q !== undefined && next.q !== q; // a new search starts without earlier fixes
+    const merged = { q, mode, category, ordering, ...(fresh ? {} : { ignore, limit }), ...next };
     if (merged.mode === "hybrid") delete merged.mode;
     if (merged.ordering === "rating") delete merged.ordering;
     setParams(Object.fromEntries(Object.entries(merged).filter(([, v]) => v)));
@@ -98,7 +120,7 @@ export default function Shop() {
           <div className="hero-grid">
             <div>
               <span className="eyebrow"><Sparkles size={14} />AI-powered shopping</span>
-              <h1>Shop the way you talk.</h1>
+              <h1>Shop the way you <span className="grad-text">talk.</span></h1>
               <p className="lead">Describe what you need in your own words. ShopFlow understands meaning, budgets and categories, and its assistant can fill your cart for you.</p>
               <SearchForm draft={draft} setDraft={setDraft} mode={mode} onMode={(m) => update({ mode: m })} onSubmit={() => { setPhoto(null); update({ q: draft.trim() }); }} onPhoto={searchByPhoto} />
               <div className="row" style={{ marginTop: 14, gap: 8 }}>
@@ -168,12 +190,16 @@ export default function Shop() {
         <div className="intent">
           <span className="label"><Sparkles size={15} />Understood as</span>
           <span className="chip static"><Search size={13} />{intent.semantic_query}</span>
-          {intent.category_slug && <span className="chip static"><Tag size={13} />{CATEGORIES[intent.category_slug]?.name || intent.category_slug}</span>}
-          {intent.min_price != null && <span className="chip static"><IndianRupee size={13} />from {rupees(intent.min_price)}</span>}
-          {intent.max_price != null && <span className="chip static"><IndianRupee size={13} />up to {rupees(intent.max_price)}</span>}
-          {intent.in_stock_only && <span className="chip static"><PackageCheck size={13} />in stock</span>}
+          {intent.category_slug && <FilterChip kind="category" ignored={ignored} onToggle={toggleIgnore} icon={Tag}>{CATEGORIES[intent.category_slug]?.name || intent.category_slug}</FilterChip>}
+          {(intent.min_price != null || intent.max_price != null) && (
+            <FilterChip kind="budget" ignored={ignored} onToggle={toggleIgnore} icon={IndianRupee}>
+              {[intent.min_price != null && `from ${rupees(intent.min_price)}`, intent.max_price != null && `up to ${rupees(intent.max_price)}`].filter(Boolean).join(" ")}
+            </FilterChip>
+          )}
+          {intent.in_stock_only && <FilterChip kind="stock" ignored={ignored} onToggle={toggleIgnore} icon={PackageCheck}>in stock</FilterChip>}
+          {limit && <button className="chip" onClick={() => update({ limit: "" })}><RotateCcw size={13} />Back to the top 12</button>}
           <span className="meta">
-            {parser?.provider === "anthropic" ? `Claude (${parser.model})` : "rule-based parser"}{parser?.cached ? " · cached" : ""} · {data.latency_ms} ms
+            {`read by ${aiBy(parser?.provider, parser?.model)}`}{parser?.cached ? " · cached" : ""} · {data.latency_ms} ms
           </span>
         </div>
       )}
@@ -182,11 +208,11 @@ export default function Shop() {
         <>
       <div className="cats">
         <button className={`cat ${!category ? "active" : ""}`} onClick={() => update({ category: "" })}>
-          <span className="cat-icon"><LayoutGrid size={20} /></span>All
+          <span className="cat-media"><LayoutGrid size={26} strokeWidth={1.8} /></span>All
         </button>
         {Object.entries(CATEGORIES).map(([slug, c]) => (
-          <button key={slug} className={`cat ${category === slug ? "active" : ""}`} style={{ "--c": c.color }} onClick={() => update({ category: slug })}>
-            <span className="cat-icon"><c.icon size={20} /></span>{c.name}
+          <button key={slug} className={`cat ${category === slug ? "active" : ""}`} onClick={() => update({ category: slug })}>
+            <span className="cat-media"><img src={c.image} alt="" width="640" height="480" loading="lazy" decoding="async" /></span>{c.name}
           </button>
         ))}
       </div>
@@ -198,7 +224,10 @@ export default function Shop() {
         </h2>
         <div className="row" style={{ gap: 8 }}>
           {q ? (
-            <button className="btn sm" onClick={() => update({ q: "" })}><X size={15} />Clear search</button>
+            <>
+              <button className={`btn sm ${explaining ? "active" : ""}`} onClick={() => setExplaining((v) => !v)} aria-expanded={explaining}><SearchCheck size={15} />Why isn't it here?</button>
+              <button className="btn sm" onClick={() => update({ q: "" })}><X size={15} />Clear search</button>
+            </>
           ) : (
             <select className="input" value={ordering} onChange={(e) => update({ ordering: e.target.value })} aria-label="Sort by">
               <option value="rating">Top rated</option>
@@ -209,6 +238,16 @@ export default function Shop() {
           )}
         </div>
       </div>
+
+      {q && explaining && (
+        <WhyNotHere
+          search={{ q, mode, category, ignore, limit }}
+          onApply={(fix) => update({
+            ignore: fix.ignore ?? ignore, limit: fix.limit ? String(fix.limit) : limit, mode: fix.mode ?? mode,
+            category: "category" in fix ? fix.category : category,
+          })}
+        />
+      )}
 
       {error && <p className="error">{error}</p>}
       {loading && !data ? (

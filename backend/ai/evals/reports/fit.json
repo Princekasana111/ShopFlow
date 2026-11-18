@@ -1,0 +1,82 @@
+{
+  "suite": "fit",
+  "config": {
+    "llm_provider": "offline",
+    "llm_model": "rule-based-v1",
+    "embedding_model": "BAAI/bge-small-en-v1.5",
+    "query_prefix": "",
+    "reviews": 19,
+    "products": 7
+  },
+  "metrics": {
+    "reading_accuracy": 1.0,
+    "verdict_accuracy": 1.0,
+    "suggestion_accuracy": 1.0
+  },
+  "details": [
+    {
+      "id": "runs-small",
+      "verdict": "runs_small",
+      "suggested": "UK 10",
+      "expected": {
+        "verdict": "runs_small",
+        "suggested": "UK 10"
+      }
+    },
+    {
+      "id": "runs-large",
+      "verdict": "runs_large",
+      "suggested": "S",
+      "expected": {
+        "verdict": "runs_large",
+        "suggested": "S"
+      }
+    },
+    {
+      "id": "true-to-size",
+      "verdict": "true_to_size",
+      "suggested": "32",
+      "expected": {
+        "verdict": "true_to_size",
+        "suggested": "32"
+      }
+    },
+    {
+      "id": "mixed",
+      "verdict": "mixed",
+      "suggested": null,
+      "expected": {
+        "verdict": "mixed",
+        "suggested": null
+      }
+    },
+    {
+      "id": "not-enough",
+      "verdict": "not_enough",
+      "suggested": null,
+      "expected": {
+        "verdict": "not_enough",
+        "suggested": null
+      }
+    },
+    {
+      "id": "already-largest",
+      "verdict": "runs_small",
+      "suggested": "",
+      "expected": {
+        "verdict": "runs_small",
+        "suggested": ""
+      }
+    },
+    {
+      "id": "followed-the-advice",
+      "verdict": "runs_small",
+      "suggested": "UK 10",
+      "expected": {
+        "verdict": "runs_small",
+        "suggested": "UK 10",
+        "followed": true
+      }
+    }
+  ]
+}

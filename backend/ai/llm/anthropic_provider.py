@@ -73,6 +73,7 @@ def _usage_from_response(message, requested_model: str) -> tuple[Usage, bool]:
 class AnthropicProvider(LLMProvider):
     name = "anthropic"
     is_live = True
+    supports_vision = True
 
     def __init__(self, model: str, use_fallbacks: bool = True, client: anthropic.Anthropic | None = None):
         self.model = model

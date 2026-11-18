@@ -271,7 +271,7 @@ def _candidates(needs: list[PlannedNeed], exclude: set[int] | None = None):
     return [[h for h in hits if best_for[h.product.pk][1] == i][:CANDIDATES_PER_NEED] for i, hits in enumerate(retrieved)]
 
 
-def build_bundle(goal: str, budget: float | None = None, user=None) -> dict:
+def build_bundle(goal: str, budget: float | None = None, user=None, skip_owned: bool = True) -> dict:
     started = time.perf_counter()
     check = guardrails.check_user_message(goal)
     if not check.allowed:
@@ -291,6 +291,24 @@ def build_bundle(goal: str, budget: float | None = None, user=None) -> dict:
     budget_paise = int(Decimal(str(budget_value)) * 100) if budget_value is not None else None
 
     groups_hits = _candidates(needs)
+    # A need the shopper already covers with something they own is left out, so the budget goes
+    # to what they actually lack. The owned item must be the same kind as the best match.
+    owned_needs = []
+    if skip_owned and getattr(user, "is_authenticated", False):
+        from .product_kinds import kind_of
+        from .purchase_check import owned_kinds
+
+        mine = owned_kinds(user)
+        kept = []
+        for need, hits in zip(needs, groups_hits):
+            top = hits[0].product if hits else None
+            owned = mine.get(kind_of(top.name, top.category.slug).key) if top else None
+            if owned:
+                owned_needs.append({"need": need.model_dump(), "owned": {
+                    "name": owned.facts.name, "order_id": owned.order_id, "status": owned.status, "since": owned.since.isoformat()}})
+            else:
+                kept.append((need, hits))
+        needs, groups_hits = [n for n, _ in kept], [h for _, h in kept]
     groups = [
         [Candidate(h.product.pk, int(h.product.price * 100), _value(w, h.similarity or 0.0, h.product.avg_rating)) for h in hits]
         for w, hits in zip(need_weights(needs), groups_hits)
@@ -318,6 +336,7 @@ def build_bundle(goal: str, budget: float | None = None, user=None) -> dict:
         "remaining": f"{Decimal(str(budget_value)) - total:.2f}" if budget_value is not None else None,
         "items": items,
         "skipped": skipped,
+        "owned": owned_needs,
         "planner": meta,
         "latency_ms": int((time.perf_counter() - started) * 1000),
     }

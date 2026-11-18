@@ -37,7 +37,7 @@ jobs:
           path: backend/.cache/fastembed
           key: fastembed-bge-small-en-v1.5-clip-vit-b-32
       - name: Build indexes with the real embedding model
-        run: python manage.py migrate --noinput && python manage.py bootstrap
+        run: python manage.py migrate --noinput && python manage.py createcachetable && python manage.py bootstrap
       - name: Retrieval eval gate (fails the build if search quality regresses)
         run: >-
           python manage.py run_evals --suite search

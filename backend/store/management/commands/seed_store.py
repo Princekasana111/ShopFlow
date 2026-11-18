@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
+from accounts.models import ShopperProfile
 from store import services
 from store.models import Category, Order, Product, Review
 
@@ -61,7 +62,15 @@ class Command(BaseCommand):
                 Review.objects.create(
                     product=Product.objects.get(slug=r["product"]), user=reviewer,
                     rating=r["rating"], title=r["title"], body=r["body"],
+                    size_bought=r.get("size_bought", ""), fit=r.get("fit", ""),
                 )
+
+        # Saved sizes and standing needs for the demo customer, used by the purchase check. Created
+        # before the sample orders so the running shoes in them get the saved size.
+        ShopperProfile.objects.get_or_create(user=demo, defaults={
+            "shoe_size_uk": 9, "clothing_size": "M", "waist_in": 32,
+            "needs": "I run outdoors most mornings, often in the rain. I cook on an induction stove. My laptop only has USB-C ports.",
+        })
 
         if not Order.objects.filter(user=demo).exists():
             self._sample_orders(demo)

@@ -24,9 +24,9 @@ export default function ProductCard({ product, match }) {
           </span>
         )}
         {match && "vector_rank" in match && (
-          <span className="match" title="Where this result came from in hybrid search">
-            <span className={match.vector_rank ? "hit" : ""}>{match.vector_rank ? `Semantic #${match.vector_rank}` : "No semantic match"}</span>
-            <span className={match.keyword_rank ? "hit" : ""}>{match.keyword_rank ? `Keyword #${match.keyword_rank}` : "No keyword match"}</span>
+          <span className="match" title="Why this result showed up: its rank when matching what your words mean, and when matching the exact words">
+            <span className={match.vector_rank ? "hit" : ""}>{match.vector_rank ? `Meaning #${match.vector_rank}` : "No meaning match"}</span>
+            <span className={match.keyword_rank ? "hit" : ""}>{match.keyword_rank ? `Words #${match.keyword_rank}` : "No word match"}</span>
           </span>
         )}
         <div className="foot">

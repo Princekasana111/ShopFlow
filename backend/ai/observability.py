@@ -84,6 +84,8 @@ def dashboard_metrics(days: int = 7) -> dict:
             }
         )
 
+    from .negotiation import offer_stats
+
     guardrails = dict(
         GuardrailEvent.objects.filter(created_at__gte=since).values_list("kind").annotate(n=Count("id"))
     )
@@ -116,4 +118,5 @@ def dashboard_metrics(days: int = 7) -> dict:
         "guardrail_events": guardrails,
         "recent_calls": recent,
         "latest_evals": latest_evals,
+        "offers": offer_stats(since),
     }

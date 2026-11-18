@@ -57,7 +57,7 @@ export function OrderCard({ order, onChange, admin }) {
         {order.items.map((i) => (
           <div key={i.id} className="order-item">
             <ProductArt product={{ name: i.product_name, category: i.category }} size="sm" />
-            <span>{i.product ? <Link to={`/products/${i.product}`}>{i.product_name}</Link> : i.product_name} <span className="muted">× {i.quantity}</span></span>
+            <span>{i.product ? <Link to={`/products/${i.product}`}>{i.product_name}</Link> : i.product_name} <span className="muted">{i.size ? ` · ${i.size}` : ""} × {i.quantity}</span></span>
             <strong>{rupees(i.line_total)}</strong>
           </div>
         ))}

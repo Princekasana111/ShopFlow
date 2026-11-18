@@ -1,0 +1,26 @@
+{"type": "review", "sizes": "UK 6, UK 7, UK 8, UK 9, UK 10, UK 11", "body": "Runs a bit small, order one size up.", "expect": "small"}
+{"type": "review", "sizes": "UK 6, UK 7, UK 8, UK 9, UK 10, UK 11", "body": "Order a size up, these are narrow.", "expect": "small"}
+{"type": "review", "sizes": "UK 6, UK 7, UK 8, UK 9, UK 10, UK 11", "body": "Tight around the toes.", "expect": "small"}
+{"type": "review", "sizes": "UK 6, UK 7, UK 8, UK 9, UK 10, UK 11", "body": "Smaller than expected; I had to exchange for UK 10.", "expect": "small"}
+{"type": "review", "sizes": "UK 6, UK 7, UK 8, UK 9, UK 10, UK 11", "body": "True to size.", "expect": "true"}
+{"type": "review", "sizes": "UK 6, UK 7, UK 8, UK 9, UK 10, UK 11", "body": "Fits perfectly in my usual size.", "expect": "true"}
+{"type": "review", "sizes": "UK 6, UK 7, UK 8, UK 9, UK 10, UK 11", "body": "Perfect fit.", "expect": "true"}
+{"type": "review", "sizes": "UK 6, UK 7, UK 8, UK 9, UK 10, UK 11", "body": "Runs large, size down.", "expect": "large"}
+{"type": "review", "sizes": "UK 6, UK 7, UK 8, UK 9, UK 10, UK 11", "body": "Great grip on wet roads.", "expect": "none"}
+{"type": "review", "sizes": "UK 6, UK 7, UK 8, UK 9, UK 10, UK 11", "body": "Tight budget, but worth it.", "expect": "none"}
+{"type": "review", "sizes": "UK 6, UK 7, UK 8, UK 9, UK 10, UK 11", "body": "Fast delivery to Pune.", "expect": "none"}
+{"type": "review", "sizes": "S, M, L, XL", "body": "A little snug across the chest.", "expect": "small"}
+{"type": "review", "sizes": "S, M, L, XL", "body": "My usual size fits.", "expect": "true"}
+{"type": "review", "sizes": "S, M, L, XL", "body": "A bit loose around the waist.", "expect": "large"}
+{"type": "review", "sizes": "S, M, L, XL", "body": "Bigger than usual; M fits me fine though I wear L.", "expect": "large"}
+{"type": "review", "sizes": "S, M, L, XL", "body": "Baggy on me, go one size down.", "expect": "large"}
+{"type": "review", "sizes": "S, M, L, XL", "body": "Small logo on the chest, looks clean.", "expect": "none"}
+{"type": "review", "sizes": "S, M, L, XL", "body": "Roomy pockets for my phone.", "expect": "none"}
+{"type": "review", "sizes": "S, M, L, XL", "body": "Loose thread on the sleeve after one wash.", "expect": "none"}
+{"type": "product", "id": "runs-small", "sizes": "UK 6, UK 7, UK 8, UK 9, UK 10, UK 11", "base": "UK 9", "reviews": [{"body": "Order one size up, narrow at the toes."}, {"body": "Tight around the toes."}, {"body": "Grippy.", "fit": "small"}, {"body": "True to size for me."}], "expect": {"verdict": "runs_small", "suggested": "UK 10"}}
+{"type": "product", "id": "runs-large", "sizes": "S, M, L, XL", "base": "M", "reviews": [{"body": "Warm, but it runs large."}, {"body": "Cosy.", "fit": "large"}], "expect": {"verdict": "runs_large", "suggested": "S"}}
+{"type": "product", "id": "true-to-size", "sizes": "28, 30, 32, 34, 36", "base": "32", "reviews": [{"body": "Comfortable.", "fit": "true"}, {"body": "My usual waist size fits perfectly."}], "expect": {"verdict": "true_to_size", "suggested": "32"}}
+{"type": "product", "id": "mixed", "sizes": "UK 6, UK 7, UK 8, UK 9, UK 10, UK 11", "base": "UK 9", "reviews": [{"body": "Runs small."}, {"body": "Runs large."}, {"body": "True to size."}], "expect": {"verdict": "mixed", "suggested": null}}
+{"type": "product", "id": "not-enough", "sizes": "UK 6, UK 7, UK 8, UK 9, UK 10, UK 11", "base": "UK 9", "reviews": [{"body": "Runs small."}, {"body": "Lovely colour."}], "expect": {"verdict": "not_enough", "suggested": null}}
+{"type": "product", "id": "already-largest", "sizes": "UK 6, UK 7, UK 8, UK 9, UK 10, UK 11", "base": "UK 11", "reviews": [{"body": "Runs small."}, {"body": "Size up, they're tight."}], "expect": {"verdict": "runs_small", "suggested": ""}}
+{"type": "product", "id": "followed-the-advice", "sizes": "UK 6, UK 7, UK 8, UK 9, UK 10, UK 11", "base": "UK 9", "picked": "UK 10", "reviews": [{"body": "Runs small."}, {"body": "Size up, they're tight."}, {"body": "True to size."}], "expect": {"verdict": "runs_small", "suggested": "UK 10", "followed": true}}

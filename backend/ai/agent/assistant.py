@@ -26,7 +26,7 @@ from django.db import transaction
 from django.db.models import Max
 
 from .. import guardrails
-from ..llm import LLMError, LLMProvider, Usage, get_llm
+from ..llm import LLMError, LLMProvider, Usage, get_agent_llm
 from ..models import ChatMessage, ChatSession
 from .prompts import SYSTEM_PROMPT
 from .tools import ToolContext, ToolOutcome, execute_tool, tool_definitions
@@ -82,7 +82,7 @@ def _evidence_from_history(history: list[dict]) -> list[str]:
 
 def run_turn(*, user, message: str, session_id: str | None = None, llm: LLMProvider | None = None) -> Iterator[dict]:
     cfg = settings.AI
-    llm = llm or get_llm()
+    llm = llm or get_agent_llm()
     started = time.perf_counter()
 
     session, is_new = _session_for(user, session_id, llm, message)

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
-  Bot, Check, FileText, LifeBuoy, LoaderCircle, Package, RotateCcw, Search, Send, ShoppingCart, Sparkles,
+  Bot, Check, FileText, LifeBuoy, LoaderCircle, Package, RotateCcw, ScanSearch, Search, Send, ShoppingCart, Sparkles,
   TriangleAlert, X,
 } from "lucide-react";
 import { notifyCartChanged, rupees, streamChat } from "../api.js";
@@ -25,6 +25,7 @@ const TOOLS = {
   list_my_orders: [Package, "Looking up your orders"],
   get_order_status: [Package, "Tracking your order"],
   search_store_policies: [LifeBuoy, "Searching the help center"],
+  check_purchase: [ScanSearch, "Checking before you buy"],
 };
 
 function StepPill({ step }) {
@@ -41,6 +42,7 @@ function StepPill({ step }) {
 }
 
 export default function AssistantPanel({ llm }) {
+  const location = useLocation();
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
@@ -131,7 +133,7 @@ export default function AssistantPanel({ llm }) {
           <div className="welcome">
             <h3>Sign in to chat</h3>
             <p className="muted" style={{ margin: 0 }}>The assistant can search products, manage your cart and track your orders.</p>
-            <Link className="btn primary" to="/login" onClick={() => setOpen(false)}>Sign in</Link>
+            <Link className="btn primary" to="/login" state={{ from: location.pathname + location.search }} onClick={() => setOpen(false)}>Sign in</Link>
             <p className="muted small" style={{ margin: 0 }}>Demo login: demo / demo12345</p>
           </div>
         </div>

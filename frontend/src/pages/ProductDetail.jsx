@@ -1,14 +1,19 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import {
-  AlignLeft, ChevronRight, CircleAlert, CircleCheck, CircleHelp, ListChecks, MessageSquareQuote, Minus, PackageCheck,
-  PackageX, Puzzle, RotateCcw, Send, ShieldCheck, ShoppingCart, Sparkles, Star, ThumbsDown, ThumbsUp, Truck, X,
+  AlignLeft, Archive, ChevronRight, CircleAlert, CircleCheck, CircleHelp, Handshake, ListChecks, MessageSquareQuote, Minus, PackageCheck,
+  PackageX, Puzzle, RotateCcw, ScanSearch, Send, ShieldCheck, ShoppingCart, Sparkles, Star, ThumbsDown, ThumbsUp, Truck, X,
 } from "lucide-react";
+import { aiBadge, aiBy, getOfferRules } from "../ai.js";
 import { api, notifyCartChanged, rupees } from "../api.js";
 import { useAuth } from "../auth.jsx";
 import ProductArt, { categoryOf } from "../components/ProductArt.jsx";
 import ProductCard from "../components/ProductCard.jsx";
+import MakeOffer from "../components/MakeOffer.jsx";
+import PurchaseCheck from "../components/PurchaseCheck.jsx";
+import { FitAdvice, ListingCheck } from "../components/ReviewSignals.jsx";
 import { Rating, Stars, Stepper, toast } from "../components/ui.jsx";
+import { preferredSize, productSizes, usePreferences } from "../sizes.js";
 
 const SENTIMENT = {
   positive: [ThumbsUp, "Mostly positive"],
@@ -37,7 +42,7 @@ function ReviewInsights({ productId, reloadKey }) {
         </div>
         <div className="row" style={{ gap: 6 }}>
           <span className="badge"><SentIcon size={13} />{sentLabel}</span>
-          <span className="badge brand" title={insights.model}>{insights.provider === "anthropic" ? "Claude" : "Offline"}{insights.cached ? " · cached" : ""}</span>
+          <span className="badge brand" title={insights.model}>{aiBadge(insights.provider)}{insights.cached ? " · cached" : ""}</span>
         </div>
       </div>
       <p style={{ marginTop: 14 }}>{insights.summary}</p>
@@ -64,6 +69,8 @@ const QUESTIONS = {
   "sports-fitness": ["Is it good for beginners?", "Is it durable?", "Does it slip?"],
 };
 const CITE_ICON = { spec: ListChecks, description: AlignLeft, review: MessageSquareQuote };
+const FIT_LABEL = { small: "Runs small", true: "True to size", large: "Runs large" };
+const EMPTY_REVIEW = { rating: 5, title: "", body: "", size_bought: "", fit: "" };
 
 function AskProduct({ product }) {
   const [question, setQuestion] = useState("");
@@ -100,7 +107,7 @@ function AskProduct({ product }) {
         <div className={`answer ${result.answerable ? "" : "unanswered"}`}>
           <div className="row spread" style={{ marginBottom: 6 }}>
             <strong className="icon-text">{result.answerable ? <Sparkles size={16} /> : <CircleHelp size={16} />}{result.answerable ? "Answer" : "Not covered"}</strong>
-            {!result.blocked && <span className="badge brand" title={result.model}>{result.provider === "anthropic" ? "Claude" : "Offline"}</span>}
+            {!result.blocked && <span className="badge brand" title={result.model}>{aiBadge(result.provider)}</span>}
           </div>
           <p style={{ margin: 0 }}>{result.answer}</p>
           {result.citations.length > 0 && (
@@ -128,7 +135,7 @@ function CompleteTheKit({ productId }) {
     <section>
       <div className="toolbar">
         <h2 className="icon-text"><Puzzle size={20} />Complete the kit</h2>
-        <span className="muted small">Things that go with it, planned by {kit.provider === "anthropic" ? "Claude" : "offline rules"}</span>
+        <span className="muted small">Things that go with it, planned by {aiBy(kit.provider)}</span>
       </div>
       <div className="kit">
         {kit.items.map((item) => (
@@ -139,6 +146,7 @@ function CompleteTheKit({ productId }) {
               <span><strong>{item.product.name}</strong><br /><span className="price" style={{ fontSize: "1rem" }}>{rupees(item.product.price)}</span></span>
             </div>
             <span className="muted small">{item.reason}</span>
+            {item.owned && <span className="badge" style={{ alignSelf: "flex-start" }}><Archive size={12} />You have {item.owned.name}</span>}
           </Link>
         ))}
       </div>
@@ -166,6 +174,7 @@ function StockLine({ stock }) {
 
 export default function ProductDetail() {
   const { id } = useParams();
+  const [params] = useSearchParams();
   const { user } = useAuth();
   const [product, setProduct] = useState(null);
   const [similar, setSimilar] = useState([]);
@@ -173,8 +182,22 @@ export default function ProductDetail() {
   const [qty, setQty] = useState(1);
   const [error, setError] = useState("");
   const [adding, setAdding] = useState(false);
-  const [review, setReview] = useState({ rating: 5, title: "", body: "" });
+  const [review, setReview] = useState(EMPTY_REVIEW);
   const [reloadKey, setReloadKey] = useState(0);
+  const [size, setSize] = useState("");
+  const [checking, setChecking] = useState(false);
+  const [bargaining, setBargaining] = useState(false);
+  const [offerMin, setOfferMin] = useState(null);
+  useEffect(() => { getOfferRules().then((r) => setOfferMin(r.min_price)); }, []);
+  const { prefs } = usePreferences(user);
+  const sizes = productSizes(product);
+  const mySize = preferredSize(prefs, sizes);
+
+  useEffect(() => {
+    setSize(mySize && sizes.includes(mySize) ? mySize : "");
+    setChecking(false);
+    setBargaining(params.get("offer") === "1"); // "Continue bargaining" from My offers
+  }, [product?.id, mySize]);
 
   useEffect(() => {
     setError("");
@@ -188,9 +211,9 @@ export default function ProductDetail() {
   const addToCart = async () => {
     setAdding(true);
     try {
-      await api("/api/cart/", { method: "POST", body: { product_id: Number(id), quantity: qty } });
+      await api("/api/cart/", { method: "POST", body: { product_id: Number(id), quantity: qty, ...(size ? { size } : {}) } });
       notifyCartChanged();
-      toast(`Added ${qty} × ${product.name} to your cart`);
+      toast(`Added ${qty} × ${product.name}${size ? ` (${size})` : ""} to your cart`);
     } catch (e) {
       toast(e.message, "error");
     } finally {
@@ -202,7 +225,7 @@ export default function ProductDetail() {
     e.preventDefault();
     try {
       const saved = await api(`/api/products/${id}/reviews/`, { method: "POST", body: review });
-      setReview({ rating: 5, title: "", body: "" });
+      setReview(EMPTY_REVIEW);
       toast(saved.is_flagged ? "Your review was held for moderation" : "Thanks for your review!", saved.is_flagged ? "error" : "success");
       setReloadKey((k) => k + 1);
     } catch (err) {
@@ -239,11 +262,28 @@ export default function ProductDetail() {
           </div>
           <p style={{ color: "var(--ink-2)" }}>{product.description}</p>
 
-          {Object.keys(product.attributes || {}).length > 0 && (
+          {Object.keys(product.attributes || {}).some((k) => k !== "sizes") && (
             <div className="specs">
-              {Object.entries(product.attributes).map(([k, v]) => (
+              {Object.entries(product.attributes).filter(([k]) => k !== "sizes").map(([k, v]) => (
                 <div key={k} className="spec"><div className="k">{k.replaceAll("_", " ")}</div><div className="v">{v}</div></div>
               ))}
+            </div>
+          )}
+
+          {sizes.length > 0 && (
+            <div className="size-picker">
+              <div className="row spread">
+                <strong className="small">Size{size ? `: ${size}` : ""}</strong>
+                {user && (mySize
+                  ? <span className="muted small">{sizes.includes(mySize) ? `Your saved size is ${mySize}` : `Not made in your size (${mySize})`}</span>
+                  : <Link to="/my-stuff" className="small">Save your sizes</Link>)}
+              </div>
+              <div className="size-options" role="radiogroup" aria-label="Size">
+                {sizes.map((s) => (
+                  <button key={s} type="button" role="radio" aria-checked={size === s} className={`size-option ${size === s ? "active" : ""} ${s === mySize ? "mine" : ""}`} onClick={() => setSize(s)}>{s}</button>
+                ))}
+              </div>
+              <FitAdvice productId={product.id} size={size} onChoose={setSize} reloadKey={reloadKey} />
             </div>
           )}
 
@@ -251,9 +291,18 @@ export default function ProductDetail() {
             <div className="buy-row">
               <Stepper value={qty} max={Math.min(product.stock, 10)} onChange={setQty} />
               {user ? (
-                <button className="btn primary lg" onClick={addToCart} disabled={adding}><ShoppingCart size={18} />{adding ? "Adding…" : "Add to cart"}</button>
+                <>
+                  <button className="btn primary lg" onClick={addToCart} disabled={adding || (sizes.length > 0 && !size)} title={sizes.length > 0 && !size ? "Choose a size first" : undefined}>
+                    <ShoppingCart size={18} />{adding ? "Adding…" : sizes.length > 0 && !size ? "Choose a size" : "Add to cart"}
+                  </button>
+                  <button className="btn lg" onClick={() => setChecking(true)}><ScanSearch size={18} />Check before buying</button>
+                  {offerMin != null && Number(product.price) >= offerMin && <button className="btn lg" onClick={() => setBargaining(true)}><Handshake size={18} />Make an offer</button>}
+                </>
               ) : (
-                <Link className="btn primary lg" to="/login"><ShoppingCart size={18} />Log in to buy</Link>
+                <>
+                  <Link className="btn primary lg" to="/login" state={{ from: `/products/${product.id}` }}><ShoppingCart size={18} />Log in to buy</Link>
+                  <span className="muted small">Log in to make an offer or check it before you buy.</span>
+                </>
               )}
             </div>
           ) : (
@@ -268,6 +317,12 @@ export default function ProductDetail() {
         </div>
       </div>
 
+      {bargaining && user && <MakeOffer product={product} size={size} needsSize={sizes.length > 0 && !size} onClose={() => setBargaining(false)} />}
+
+      {checking && user && <PurchaseCheck auto productId={product.id} size={size} title="Before you buy this" onSize={(_, s) => setSize(s)} />}
+
+      <ListingCheck productId={product.id} reloadKey={reloadKey} />
+
       <AskProduct product={product} />
 
       <ReviewInsights productId={id} reloadKey={reloadKey} />
@@ -278,7 +333,7 @@ export default function ProductDetail() {
         <section>
           <div className="toolbar">
             <h2>You might also like</h2>
-            <span className="muted small">Nearest neighbours in embedding space</span>
+            <span className="muted small">Similar products, matched by what they're for</span>
           </div>
           <div className="grid">{similar.map((p) => <ProductCard key={p.id} product={p} />)}</div>
         </section>
@@ -311,6 +366,12 @@ export default function ProductDetail() {
                 <div>
                   <div className="row" style={{ gap: 8 }}><Stars value={r.rating} size={13} /><strong>{r.title}</strong></div>
                   <p style={{ margin: "6px 0 4px" }}>{r.body}</p>
+                  {(r.size_bought || r.fit) && (
+                    <div className="row" style={{ gap: 6, marginBottom: 4 }}>
+                      {r.size_bought && <span className="badge">Bought {r.size_bought}</span>}
+                      {r.fit && <span className="badge">{FIT_LABEL[r.fit]}</span>}
+                    </div>
+                  )}
                   <span className="muted small">{r.username} · {new Date(r.created_at).toLocaleDateString("en-IN")}</span>
                 </div>
               </div>
@@ -319,8 +380,27 @@ export default function ProductDetail() {
               <form onSubmit={submitReview} className="card flat" style={{ marginTop: 16, background: "var(--surface-2)" }}>
                 <h3>Write a review</h3>
                 <StarPicker value={review.rating} onChange={(rating) => setReview({ ...review, rating })} />
-                <input className="input" style={{ marginTop: 10 }} placeholder="Title" value={review.title} onChange={(e) => setReview({ ...review, title: e.target.value })} />
-                <textarea className="input" style={{ marginTop: 8 }} rows={3} required placeholder="What did you like or dislike?" value={review.body} onChange={(e) => setReview({ ...review, body: e.target.value })} />
+                <label className="field" style={{ marginTop: 10 }}>Title (optional)
+                  <input className="input" placeholder="Sum it up in a few words" maxLength={120} value={review.title} onChange={(e) => setReview({ ...review, title: e.target.value })} />
+                </label>
+                <label className="field">Your review
+                  <textarea className="input" rows={3} required placeholder="What did you like or dislike?" value={review.body} onChange={(e) => setReview({ ...review, body: e.target.value })} />
+                </label>
+                {sizes.length > 0 && (
+                  <div className="review-fit">
+                    <span className="small" style={{ fontWeight: 600, color: "var(--ink-2)" }}>Size and fit (optional)</span>
+                    <select className="input size-select" value={review.size_bought} onChange={(e) => setReview({ ...review, size_bought: e.target.value })} aria-label="Size you bought">
+                      <option value="">Size you bought</option>
+                      {sizes.map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                    <div className="segmented" role="radiogroup" aria-label="How did it fit?">
+                      {Object.entries(FIT_LABEL).map(([k, label]) => (
+                        <button key={k} type="button" role="radio" aria-checked={review.fit === k} className={review.fit === k ? "active" : ""}
+                          onClick={() => setReview({ ...review, fit: review.fit === k ? "" : k })}>{label}</button>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <button className="btn primary" style={{ marginTop: 10 }}>Submit review</button>
               </form>
             )}

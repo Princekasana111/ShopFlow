@@ -196,8 +196,9 @@ def answer_question(question: str, user=None, k: int = 4) -> dict:
             for n in sorted(set(valid))
         ],
         "retrieved": [
-            {"doc_slug": r.chunk.doc_slug, "section": r.chunk.section, "score": r.score, "similarity": r.similarity}
-            for r in retrieved
+            {"doc_slug": r.chunk.doc_slug, "doc_title": r.chunk.doc_title, "section": r.chunk.section, "score": r.score,
+             "similarity": r.similarity, "cited": i in valid}
+            for i, r in enumerate(retrieved, start=1)
         ],
         "provider": provider,
         "model": model,

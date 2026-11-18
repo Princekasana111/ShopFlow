@@ -3,6 +3,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.utils import timezone
 
 
 class Category(models.Model):
@@ -27,6 +28,13 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal("0"))])
     stock = models.PositiveIntegerField(default=0)
     attributes = models.JSONField(default=dict, blank=True)
+    # "Make an offer": the lowest price the AI seller may agree to. Empty means the list price minus
+    # the store's default maximum discount (see ai.negotiation). At or above the price turns bargaining
+    # off for this product. Never sent to the LLM or to the browser.
+    floor_price = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(Decimal("0"))],
+        help_text="Lowest price the AI seller may agree to. Empty = the default maximum discount; at or above the price = no bargaining.",
+    )
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -49,6 +57,15 @@ class Review(models.Model):
     rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
     title = models.CharField(max_length=120, blank=True)
     body = models.TextField(max_length=2000)
+
+    class Fit(models.TextChoices):
+        SMALL = "small", "Runs small"
+        TRUE = "true", "True to size"
+        LARGE = "large", "Runs large"
+
+    # Optional, for sized products: the size the reviewer bought and how it fit (the fit advisor).
+    size_bought = models.CharField(max_length=20, blank=True, default="")
+    fit = models.CharField(max_length=5, choices=Fit.choices, blank=True, default="")
     # Set by the AI guardrail when the review text looks like a prompt-injection attempt.
     # Flagged reviews are hidden from every LLM prompt.
     is_flagged = models.BooleanField(default=False)
@@ -74,13 +91,30 @@ class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    # Chosen size for sized products (see store.sizes); blank until chosen. One line per product,
+    # so one size per product per cart.
+    size = models.CharField(max_length=20, blank=True, default="")
+    # A price agreed with the AI seller ("Make an offer"). It covers one unit, so a line with a deal
+    # always has quantity 1. An expired deal falls back to the list price.
+    offer = models.ForeignKey("Offer", on_delete=models.SET_NULL, null=True, blank=True, related_name="cart_items")
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["cart", "product"], name="one_line_per_product")]
 
     @property
+    def deal(self) -> "Offer | None":
+        offer = self.offer
+        return offer if offer is not None and offer.product_id == self.product_id and offer.is_valid_deal else None
+
+    @property
+    def unit_price(self) -> Decimal:
+        deal = self.deal
+        # If staff cut the list price below an agreed deal, the shopper pays the lower one.
+        return min(deal.deal_price, self.product.price) if deal else self.product.price
+
+    @property
     def line_total(self) -> Decimal:
-        return self.product.price * self.quantity
+        return self.unit_price * self.quantity
 
 
 class Order(models.Model):
@@ -125,6 +159,7 @@ class OrderItem(models.Model):
     product_name = models.CharField(max_length=200)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    size = models.CharField(max_length=20, blank=True, default="")
 
     @property
     def line_total(self) -> Decimal:
@@ -141,3 +176,43 @@ class OrderStatusEvent(models.Model):
 
     class Meta:
         ordering = ["created_at", "id"]
+
+
+class Offer(models.Model):
+    """One "Make an offer" conversation with the AI seller, and the deal it may end in.
+
+    The price rules are code (ai.negotiation); the LLM only reads the shopper's message and writes the
+    seller's words, and it is never told the floor price. An agreed deal is for one unit, is valid
+    until `expires_at`, and can be used in one order.
+    """
+
+    class Status(models.TextChoices):
+        OPEN = "OPEN", "Negotiating"
+        AGREED = "AGREED", "Deal agreed"
+        USED = "USED", "Used in an order"
+        CLOSED = "CLOSED", "Ended without a deal"
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="offers")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="offers")
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.OPEN)
+    list_price = models.DecimalField(max_digits=10, decimal_places=2)
+    counter_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)  # the seller's current price
+    deal_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    rounds = models.PositiveSmallIntegerField(default=0)  # concessions made so far
+    turns = models.PositiveSmallIntegerField(default=0)  # shopper messages so far
+    messages = models.JSONField(default=list, blank=True)  # [{"role": "shopper"|"seller", "text", "price", "action", "at"}]
+    expires_at = models.DateTimeField(null=True, blank=True)
+    order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True, blank=True, related_name="offers")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [models.Index(fields=["user", "product", "-created_at"])]
+
+    def __str__(self):
+        return f"Offer #{self.pk} on {self.product} ({self.status})"
+
+    @property
+    def is_valid_deal(self) -> bool:
+        return self.status == self.Status.AGREED and self.deal_price is not None and self.expires_at is not None and self.expires_at > timezone.now()

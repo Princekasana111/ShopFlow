@@ -36,7 +36,8 @@ def product_document(product) -> str:
     Name, brand and category come first because they carry the most signal; attributes
     are flattened to "key: value" pairs so specs such as "waterproof: yes" are searchable.
     """
-    attributes = "; ".join(f"{k.replace('_', ' ')}: {v}" for k, v in sorted((product.attributes or {}).items()))
+    # Sizes are a buying option, not what the product is; leaving them out keeps search unchanged.
+    attributes = "; ".join(f"{k.replace('_', ' ')}: {v}" for k, v in sorted((product.attributes or {}).items()) if k != "sizes")
     parts = [
         product.name,
         f"Brand: {product.brand}" if product.brand else "",

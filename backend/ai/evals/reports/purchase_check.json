@@ -1,0 +1,615 @@
+{
+  "suite": "purchase_check",
+  "config": {
+    "llm_provider": "offline",
+    "llm_model": "rule-based-v1",
+    "embedding_model": "BAAI/bge-small-en-v1.5",
+    "query_prefix": "",
+    "scenarios": 35
+  },
+  "metrics": {
+    "check_status_accuracy": 1.0,
+    "verdict_accuracy": 1.0,
+    "alternative_hit": 1.0,
+    "requirement_accuracy": 1.0,
+    "warning_precision": 1.0,
+    "warning_recall": 1.0
+  },
+  "details": [
+    {
+      "id": "dup-same-flask",
+      "verdict": "review",
+      "statuses": {
+        "sizes": "skip",
+        "compatibility": "skip",
+        "requirements": "skip",
+        "duplicates": "warn",
+        "alternatives": "skip"
+      },
+      "mismatches": {},
+      "alternative": null,
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "dup-bottle-vs-flask",
+      "verdict": "ready",
+      "statuses": {
+        "sizes": "skip",
+        "compatibility": "skip",
+        "requirements": "skip",
+        "duplicates": "info",
+        "alternatives": "skip"
+      },
+      "mismatches": {},
+      "alternative": null,
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "dup-flask-replacement",
+      "verdict": "ready",
+      "statuses": {
+        "sizes": "skip",
+        "compatibility": "skip",
+        "requirements": "skip",
+        "duplicates": "info",
+        "alternatives": "skip"
+      },
+      "mismatches": {},
+      "alternative": null,
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "dup-shoes-on-the-way",
+      "verdict": "review",
+      "statuses": {
+        "sizes": "pass",
+        "compatibility": "skip",
+        "requirements": "skip",
+        "duplicates": "warn",
+        "alternatives": "info"
+      },
+      "mismatches": {},
+      "alternative": "stride-runner-road-running-shoes",
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "dup-old-running-shoes",
+      "verdict": "ready",
+      "statuses": {
+        "sizes": "pass",
+        "compatibility": "skip",
+        "requirements": "skip",
+        "duplicates": "info",
+        "alternatives": "skip"
+      },
+      "mismatches": {},
+      "alternative": null,
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "dup-socks-again",
+      "verdict": "ready",
+      "statuses": {
+        "sizes": "pass",
+        "compatibility": "skip",
+        "requirements": "skip",
+        "duplicates": "info",
+        "alternatives": "skip"
+      },
+      "mismatches": {},
+      "alternative": null,
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "dup-tees",
+      "verdict": "ready",
+      "statuses": {
+        "sizes": "pass",
+        "compatibility": "skip",
+        "requirements": "skip",
+        "duplicates": "info",
+        "alternatives": "skip"
+      },
+      "mismatches": {},
+      "alternative": null,
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "dup-earbuds-vs-headphones",
+      "verdict": "ready",
+      "statuses": {
+        "sizes": "skip",
+        "compatibility": "skip",
+        "requirements": "skip",
+        "duplicates": "info",
+        "alternatives": "skip"
+      },
+      "mismatches": {},
+      "alternative": null,
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "dup-unrelated",
+      "verdict": "ready",
+      "statuses": {
+        "sizes": "skip",
+        "compatibility": "skip",
+        "requirements": "skip",
+        "duplicates": "skip",
+        "alternatives": "skip"
+      },
+      "mismatches": {},
+      "alternative": null,
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "cart-two-running-shoes",
+      "verdict": "review",
+      "statuses": {
+        "sizes": "pass",
+        "compatibility": "skip",
+        "requirements": "skip",
+        "duplicates": "warn",
+        "alternatives": "skip"
+      },
+      "mismatches": {},
+      "alternative": null,
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "cart-flask-and-bottle",
+      "verdict": "ready",
+      "statuses": {
+        "sizes": "skip",
+        "compatibility": "skip",
+        "requirements": "skip",
+        "duplicates": "info",
+        "alternatives": "skip"
+      },
+      "mismatches": {},
+      "alternative": null,
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "dup-same-book",
+      "verdict": "review",
+      "statuses": {
+        "sizes": "skip",
+        "compatibility": "skip",
+        "requirements": "skip",
+        "duplicates": "warn",
+        "alternatives": "skip"
+      },
+      "mismatches": {},
+      "alternative": null,
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "dup-different-book",
+      "verdict": "ready",
+      "statuses": {
+        "sizes": "skip",
+        "compatibility": "skip",
+        "requirements": "skip",
+        "duplicates": "skip",
+        "alternatives": "skip"
+      },
+      "mismatches": {},
+      "alternative": null,
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "size-mismatch",
+      "verdict": "review",
+      "statuses": {
+        "sizes": "warn",
+        "compatibility": "skip",
+        "requirements": "skip",
+        "duplicates": "skip",
+        "alternatives": "skip"
+      },
+      "mismatches": {},
+      "alternative": null,
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "size-match",
+      "verdict": "ready",
+      "statuses": {
+        "sizes": "pass",
+        "compatibility": "skip",
+        "requirements": "skip",
+        "duplicates": "skip",
+        "alternatives": "skip"
+      },
+      "mismatches": {},
+      "alternative": null,
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "size-not-made",
+      "verdict": "stop",
+      "statuses": {
+        "sizes": "fail",
+        "compatibility": "skip",
+        "requirements": "skip",
+        "duplicates": "skip",
+        "alternatives": "skip"
+      },
+      "mismatches": {},
+      "alternative": null,
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "size-not-chosen",
+      "verdict": "review",
+      "statuses": {
+        "sizes": "warn",
+        "compatibility": "skip",
+        "requirements": "skip",
+        "duplicates": "skip",
+        "alternatives": "skip"
+      },
+      "mismatches": {},
+      "alternative": null,
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "size-stated-wins",
+      "verdict": "review",
+      "statuses": {
+        "sizes": "warn",
+        "compatibility": "skip",
+        "requirements": "skip",
+        "duplicates": "skip",
+        "alternatives": "skip"
+      },
+      "mismatches": {},
+      "alternative": null,
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "size-waist",
+      "verdict": "ready",
+      "statuses": {
+        "sizes": "pass",
+        "compatibility": "skip",
+        "requirements": "skip",
+        "duplicates": "skip",
+        "alternatives": "skip"
+      },
+      "mismatches": {},
+      "alternative": null,
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "size-kids",
+      "verdict": "ready",
+      "statuses": {
+        "sizes": "info",
+        "compatibility": "skip",
+        "requirements": "skip",
+        "duplicates": "skip",
+        "alternatives": "skip"
+      },
+      "mismatches": {},
+      "alternative": null,
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "req-waterproof-runner",
+      "verdict": "review",
+      "statuses": {
+        "sizes": "pass",
+        "compatibility": "skip",
+        "requirements": "warn",
+        "duplicates": "skip",
+        "alternatives": "warn"
+      },
+      "mismatches": {},
+      "alternative": "stride-aqua-waterproof-running-shoes",
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "req-anc-earbuds",
+      "verdict": "review",
+      "statuses": {
+        "sizes": "skip",
+        "compatibility": "skip",
+        "requirements": "warn",
+        "duplicates": "skip",
+        "alternatives": "warn"
+      },
+      "mismatches": {},
+      "alternative": "aurora-anc-wireless-headphones",
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "req-warm-rain-jacket",
+      "verdict": "review",
+      "statuses": {
+        "sizes": "pass",
+        "compatibility": "skip",
+        "requirements": "warn",
+        "duplicates": "skip",
+        "alternatives": "skip"
+      },
+      "mismatches": {},
+      "alternative": null,
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "req-quickdry-tee",
+      "verdict": "review",
+      "statuses": {
+        "sizes": "pass",
+        "compatibility": "skip",
+        "requirements": "warn",
+        "duplicates": "skip",
+        "alternatives": "warn"
+      },
+      "mismatches": {},
+      "alternative": "drymax-sports-t-shirt",
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "req-budget-headphones",
+      "verdict": "review",
+      "statuses": {
+        "sizes": "skip",
+        "compatibility": "skip",
+        "requirements": "warn",
+        "duplicates": "skip",
+        "alternatives": "skip"
+      },
+      "mismatches": {},
+      "alternative": null,
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "req-light-runner",
+      "verdict": "ready",
+      "statuses": {
+        "sizes": "pass",
+        "compatibility": "skip",
+        "requirements": "pass",
+        "duplicates": "skip",
+        "alternatives": "skip"
+      },
+      "mismatches": {},
+      "alternative": null,
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "req-standing-rain",
+      "verdict": "ready",
+      "statuses": {
+        "sizes": "pass",
+        "compatibility": "skip",
+        "requirements": "info",
+        "duplicates": "skip",
+        "alternatives": "info"
+      },
+      "mismatches": {},
+      "alternative": "stride-aqua-waterproof-running-shoes",
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "req-tennis-ball-bat",
+      "verdict": "review",
+      "statuses": {
+        "sizes": "skip",
+        "compatibility": "warn",
+        "requirements": "warn",
+        "duplicates": "skip",
+        "alternatives": "warn"
+      },
+      "mismatches": {},
+      "alternative": "kashmir-willow-tennis-ball-bat",
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "compat-monitor-usb-c",
+      "verdict": "review",
+      "statuses": {
+        "sizes": "skip",
+        "compatibility": "warn",
+        "requirements": "skip",
+        "duplicates": "skip",
+        "alternatives": "skip"
+      },
+      "mismatches": {},
+      "alternative": null,
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "compat-monitor-hdmi",
+      "verdict": "ready",
+      "statuses": {
+        "sizes": "skip",
+        "compatibility": "pass",
+        "requirements": "skip",
+        "duplicates": "skip",
+        "alternatives": "skip"
+      },
+      "mismatches": {},
+      "alternative": null,
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "compat-football-kid",
+      "verdict": "review",
+      "statuses": {
+        "sizes": "skip",
+        "compatibility": "warn",
+        "requirements": "skip",
+        "duplicates": "skip",
+        "alternatives": "skip"
+      },
+      "mismatches": {},
+      "alternative": null,
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "compat-pan-induction",
+      "verdict": "ready",
+      "statuses": {
+        "sizes": "skip",
+        "compatibility": "pass",
+        "requirements": "skip",
+        "duplicates": "skip",
+        "alternatives": "skip"
+      },
+      "mismatches": {},
+      "alternative": null,
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "compat-webcam-monitor",
+      "verdict": "ready",
+      "statuses": {
+        "sizes": "skip",
+        "compatibility": "pass",
+        "requirements": "skip",
+        "duplicates": "skip",
+        "alternatives": "skip"
+      },
+      "mismatches": {},
+      "alternative": null,
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "compat-mouse-usb-c",
+      "verdict": "review",
+      "statuses": {
+        "sizes": "skip",
+        "compatibility": "warn",
+        "requirements": "skip",
+        "duplicates": "skip",
+        "alternatives": "skip"
+      },
+      "mismatches": {},
+      "alternative": null,
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    },
+    {
+      "id": "ready-yoga-mat",
+      "verdict": "ready",
+      "statuses": {
+        "sizes": "skip",
+        "compatibility": "skip",
+        "requirements": "skip",
+        "duplicates": "skip",
+        "alternatives": "skip"
+      },
+      "mismatches": {},
+      "alternative": null,
+      "judge": {
+        "provider": "offline",
+        "model": "rule-based-v1"
+      }
+    }
+  ]
+}

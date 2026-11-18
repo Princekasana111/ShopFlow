@@ -18,11 +18,11 @@ from store.serializers import ProductListSerializer
 from . import copywriter, rag, reviews
 from .agent.assistant import SessionNotFound, run_turn, session_transcript
 from .embeddings import get_embedder
-from .llm import LLMError, get_llm
+from .llm import LLMError, get_agent_llm, get_llm
 from .models import ChatSession, KnowledgeChunk, ProductEmbedding
 from .observability import dashboard_metrics
-from .query_understanding import intent_to_filters, parse_query
-from .search import MODES, SearchFilters, search_products, similar_products
+from .query_understanding import IGNORABLE, plan_search
+from .search import MODES, search_products, similar_products
 
 logger = logging.getLogger(__name__)
 
@@ -33,10 +33,36 @@ class StatusView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        llm = get_llm()
+        from .llm.switch import local_switch_on
+
+        llm, agent = get_llm(), get_agent_llm()
+        local = settings.AI["LOCAL_LLM_URL"]
+        switched_on = bool(local) and local_switch_on(fresh=True)
+        degraded = getattr(llm, "degraded", False)
+        llm_info = None
+        if llm.name == "local" and not switched_on:  # staff turned it off: the offline rules answer
+            llm_info = {"provider": "offline", "model": "rule-based-v1", "is_live": False, "degraded": False}
+        elif llm.name == "local" and not degraded:
+            # Check the local model is really up, so the badge doesn't say "Local AI" while Ollama is stopped
+            # (a request would only discover it by failing). Remembered for 30 seconds.
+            from django.core.cache import cache
+
+            try:
+                up = cache.get("local-llm-ready")
+                if up is None:
+                    up = llm.primary.ready()
+                    cache.set("local-llm-ready", up, 30)
+            except Exception:  # the status badge must never break the page
+                up = False
+            degraded = not up
         return Response(
             {
-                "llm": {"provider": llm.name, "model": llm.model, "is_live": llm.is_live, "degraded": getattr(llm, "degraded", False)},
+                "llm": llm_info or {"provider": llm.name, "model": llm.model, "is_live": llm.is_live and not degraded, "degraded": degraded},
+                # The shopping assistant's tool loop never runs on the local model.
+                "assistant": {"provider": agent.name, "model": agent.model, "is_live": agent.is_live, "degraded": getattr(agent, "degraded", False)},
+                "local_model": {"enabled": bool(local), "on": switched_on, "model": settings.AI["LOCAL_LLM_MODEL"] if local else None,
+                                "features": settings.AI["LOCAL_LLM_FEATURES"] if local else []},
+                "offers": {"min_price": settings.AI["OFFER_MIN_PRICE"], "deal_minutes": settings.AI["OFFER_DEAL_MINUTES"]},
                 "embeddings": {"provider": settings.AI["EMBEDDING_PROVIDER"], "model": get_embedder().name, "dim": settings.AI["EMBEDDING_DIM"]},
                 "index": {
                     "products": Product.objects.filter(is_active=True).count(),
@@ -65,12 +91,31 @@ def _decimal(value, name):
         raise serializers.ValidationError({name: "Must be a number."})
 
 
+def _ignored(params) -> list[str]:
+    return [x for x in params.get("ignore", "").split(",") if x in IGNORABLE]
+
+
+def _plan(request, query: str):
+    """Filters for a search request: the parsed intent, overridden by explicit parameters, minus `ignore`d constraints."""
+    params = request.query_params
+    return plan_search(
+        query,
+        parse=params.get("parse", "true").lower() not in ("0", "false", "no"),
+        category=params.get("category") or None,
+        min_price=_decimal(params.get("min_price"), "min_price"),
+        max_price=_decimal(params.get("max_price"), "max_price"),
+        in_stock=params.get("in_stock") in ("1", "true"),
+        ignore=_ignored(params),
+        user=request.user,
+    )
+
+
 class SearchView(APIView):
     """GET /api/ai/search/?q=...&mode=hybrid|vector|keyword&parse=true
 
     With parse=true (default) the query is first turned into structured filters by the LLM
-    (category, price range, stock). Explicit category/min_price/max_price/in_stock params
-    override the parsed values.
+    (category, price range, stock). Explicit category/min_price/max_price/in_stock params override the
+    parsed values, and `ignore=budget,category,stock` then drops those constraints wherever they came from.
     """
 
     permission_classes = [permissions.AllowAny]
@@ -85,23 +130,7 @@ class SearchView(APIView):
         if mode not in MODES:
             return Response({"detail": f"mode must be one of {', '.join(MODES)}"}, status=status.HTTP_400_BAD_REQUEST)
         limit = _int_param(params, "limit", 12, 1, 30)
-        use_parser = params.get("parse", "true").lower() not in ("0", "false", "no") and bool(query)
-
-        intent, parser_meta, semantic_query = None, None, query
-        filters = SearchFilters()
-        if use_parser:
-            intent, parser_meta = parse_query(query, user=request.user)
-            filters = intent_to_filters(intent)
-            semantic_query = intent.semantic_query
-
-        if params.get("category"):
-            filters.category = params["category"]
-        if (v := _decimal(params.get("min_price"), "min_price")) is not None:
-            filters.min_price = v
-        if (v := _decimal(params.get("max_price"), "max_price")) is not None:
-            filters.max_price = v
-        if params.get("in_stock") in ("1", "true"):
-            filters.in_stock_only = True
+        intent, parser_meta, semantic_query, filters = _plan(request, query)
 
         hits = search_products(semantic_query, filters, mode=mode, limit=limit)
         results = []
@@ -119,6 +148,7 @@ class SearchView(APIView):
                 "intent": intent.model_dump() if intent else None,
                 "parser": parser_meta,
                 "filters": filters.as_dict(),
+                "ignored": _ignored(params),
                 "results": results,
                 "latency_ms": int((time.perf_counter() - started) * 1000),
             }
@@ -161,7 +191,10 @@ class AskView(APIView):
     def post(self, request):
         serializer = AskSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        return Response(rag.answer_question(serializer.validated_data["question"], user=request.user))
+        result = rag.answer_question(serializer.validated_data["question"], user=request.user)
+        if not request.user.is_staff:
+            result.pop("retrieved", None)  # shoppers get the answer and its sources; what the search retrieved is for staff
+        return Response(result)
 
 
 class ChatRequestSerializer(serializers.Serializer):
@@ -297,6 +330,7 @@ class MetricsView(APIView):
 class PlannerSerializer(serializers.Serializer):
     goal = serializers.CharField(min_length=3, max_length=500)
     budget = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=Decimal("1"), required=False, allow_null=True)
+    skip_owned = serializers.BooleanField(default=True, help_text="Signed-in shoppers: leave out needs already covered by things they own.")
 
 
 class PlannerView(APIView):
@@ -313,7 +347,8 @@ class PlannerView(APIView):
         serializer.is_valid(raise_exception=True)
         budget = serializer.validated_data.get("budget")
         try:
-            return Response(build_bundle(serializer.validated_data["goal"], float(budget) if budget is not None else None, user=request.user))
+            return Response(build_bundle(serializer.validated_data["goal"], float(budget) if budget is not None else None,
+                                         user=request.user, skip_owned=serializer.validated_data["skip_owned"]))
         except ValueError as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -362,4 +397,292 @@ class CompleteTheKitView(APIView):
         from .planner import complete_the_kit
 
         product = get_object_or_404(Product.objects.select_related("category"), pk=product_id, is_active=True)
-        return Response(complete_the_kit(product, user=request.user))
+        data = complete_the_kit(product, user=request.user)
+        if request.user.is_authenticated:  # the kit is cached for everyone; mark what this shopper already has
+            from .product_kinds import kind_of
+            from .purchase_check import owned_kinds
+
+            mine = owned_kinds(request.user)
+            items = []
+            for item in data["items"]:
+                owned = mine.get(kind_of(item["product"]["name"]).key)
+                items.append({**item, "owned": {"name": owned.facts.name, "order_id": owned.order_id} if owned else None})
+            data = {**data, "items": items}
+        return Response(data)
+
+
+class PurchaseCheckSerializer(serializers.Serializer):
+    product_id = serializers.IntegerField(min_value=1, required=False)
+    size = serializers.CharField(max_length=20, required=False, allow_blank=True)
+    requirements = serializers.CharField(max_length=500, required=False, allow_blank=True)
+
+
+class PurchaseCheckView(APIView):
+    """POST {product_id?, size?, requirements?}: the five pre-purchase checks on the cart, or on one product."""
+
+    permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "ai_search"
+
+    def post(self, request):
+        from store.services import CartError, validate_size
+
+        from .purchase_check import purchase_check
+
+        serializer = PurchaseCheckSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        product = None
+        if data.get("product_id"):
+            product = get_object_or_404(annotated_products(), pk=data["product_id"], is_active=True)  # with rating
+            try:
+                validate_size(product, data.get("size"))
+            except CartError as exc:
+                return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            return Response(purchase_check(request.user, product=product, size=data.get("size"), requirements=data.get("requirements", "")))
+        except ValueError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class OwnedView(APIView):
+    """GET: what the signed-in shopper already owns, grouped by kind, with replacement hints."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        from .purchase_check import owned_inventory
+
+        return Response(owned_inventory(request.user))
+
+
+# ---------------------------------------------------------------------------
+# Make an offer, listing vs reviews, fit advisor, "why isn't this in my results?"
+# ---------------------------------------------------------------------------
+
+class StartOfferSerializer(serializers.Serializer):
+    product_id = serializers.IntegerField(min_value=1)
+
+
+class OfferMessageSerializer(serializers.Serializer):
+    message = serializers.CharField(max_length=500, trim_whitespace=True)
+
+
+class AcceptOfferSerializer(serializers.Serializer):
+    size = serializers.CharField(max_length=20, required=False, allow_blank=True)
+    add_to_cart = serializers.BooleanField(default=True)
+
+
+class OffersView(APIView):
+    """GET: the shopper's bargaining chats and deals ("My offers").
+    POST {product_id}: open (or resume) a "Make an offer" chat with the AI seller."""
+
+    permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "ai_chat"
+
+    def get_throttles(self):
+        return [] if self.request.method == "GET" else super().get_throttles()
+
+    def get(self, request):
+        from .negotiation import list_offers
+
+        return Response(list_offers(request.user))
+
+    def post(self, request):
+        from .negotiation import OfferError, start_offer
+
+        serializer = StartOfferSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        product = get_object_or_404(Product, pk=serializer.validated_data["product_id"], is_active=True)
+        try:
+            return Response(start_offer(request.user, product))
+        except OfferError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class OfferMessageView(APIView):
+    """POST {message}: the shopper's next message; returns the seller's reply and the new state."""
+
+    permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "ai_chat"
+
+    def post(self, request, offer_id):
+        from .negotiation import OfferError, send_message
+
+        serializer = OfferMessageSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            return Response(send_message(request.user, offer_id, serializer.validated_data["message"]))
+        except (OfferError, ValueError) as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AcceptOfferView(APIView):
+    """POST {size?, add_to_cart?}: agree to the seller's current price and put the deal in the cart."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, offer_id):
+        from .negotiation import OfferError, accept_offer
+
+        serializer = AcceptOfferSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            return Response(accept_offer(request.user, offer_id, size=serializer.validated_data.get("size") or None,
+                                         add_to_cart=serializer.validated_data["add_to_cart"]))
+        except OfferError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ReopenOfferView(APIView):
+    """POST: "Change my offer": put an agreed deal back on the table and keep bargaining."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, offer_id):
+        from .negotiation import OfferError, reopen_offer
+
+        try:
+            return Response(reopen_offer(request.user, offer_id))
+        except OfferError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class DropOfferView(APIView):
+    """POST: cancel a deal (it leaves the cart) or end an open chat."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, offer_id):
+        from .negotiation import OfferError, drop_offer
+
+        try:
+            return Response(drop_offer(request.user, offer_id))
+        except OfferError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ListingCheckView(APIView):
+    """GET: where reviews back up or contradict the product listing's claims."""
+
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "ai_search"
+
+    def get(self, request, product_id):
+        from .listing_check import check_listing
+
+        product = get_object_or_404(Product, pk=product_id, is_active=True)
+        return Response(check_listing(product, user=request.user))
+
+
+class ListingIssuesView(APIView):
+    """Staff only: every listing claim that reviewers dispute, across the catalog."""
+
+    permission_classes = [permissions.IsAdminUser]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "ai_admin"
+
+    def get(self, request):
+        from .listing_check import listing_issues
+
+        return Response(listing_issues(user=request.user))
+
+
+class FitView(APIView):
+    """GET ?size=: how the product fits according to its reviews, and which size to pick."""
+
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "ai_search"
+
+    def get(self, request, product_id):
+        from store.sizes import SizePrefs
+
+        from store.sizes import product_sizes
+
+        from .fit import fit_summary, usual_size
+
+        product = get_object_or_404(Product, pk=product_id, is_active=True)
+        usual = ""
+        if request.user.is_authenticated:
+            from accounts.models import profile_for
+
+            usual = usual_size(SizePrefs.from_profile(profile_for(request.user)), product_sizes(product))
+        return Response(fit_summary(product, usual=usual, picked=request.query_params.get("size") or None, user=request.user))
+
+
+class SearchExplainView(APIView):
+    """GET ?q=&product_id= (plus the search's own mode, limit, category, price, in_stock and ignore params):
+    why that product isn't in the results, and a tested fix."""
+
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "ai_search"
+
+    def get(self, request):
+        from .search_explain import explain
+
+        params = request.query_params
+        query = params.get("q", "").strip()[:300]
+        mode = params.get("mode", "hybrid")
+        if not query:
+            return Response({"detail": "Send the search text as q."}, status=status.HTTP_400_BAD_REQUEST)
+        if mode not in MODES:
+            return Response({"detail": f"mode must be one of {', '.join(MODES)}"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            product_id = int(params.get("product_id", ""))
+        except ValueError:
+            return Response({"detail": "Send the product's id as product_id."}, status=status.HTTP_400_BAD_REQUEST)
+        product = get_object_or_404(Product.objects.select_related("category"), pk=product_id)
+        if not product.is_active and not request.user.is_staff:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        return Response(explain(
+            query, product, mode=mode, limit=_int_param(params, "limit", 12, 1, 30),
+            parse=params.get("parse", "true").lower() not in ("0", "false", "no"),
+            category=params.get("category") or None,
+            min_price=_decimal(params.get("min_price"), "min_price"),
+            max_price=_decimal(params.get("max_price"), "max_price"),
+            in_stock=params.get("in_stock") in ("1", "true"),
+            ignore=_ignored(params), user=request.user,
+        ))
+
+
+class LocalSwitchSerializer(serializers.Serializer):
+    on = serializers.BooleanField()
+
+
+class LocalModelView(APIView):
+    """Staff only. GET: the local model's state. POST {on}: turn it on or off for the whole site."""
+
+    permission_classes = [permissions.IsAdminUser]
+
+    def _state(self, note: str = "") -> dict:
+        from .llm.local_provider import LocalProvider
+        from .llm.switch import local_switch_on
+
+        cfg = settings.AI
+        if not cfg["LOCAL_LLM_URL"]:
+            return {"configured": False, "on": False, "ready": False, "model": None, "features": [], "note": note}
+        probe = LocalProvider(cfg["LOCAL_LLM_URL"], cfg["LOCAL_LLM_MODEL"])
+        return {"configured": True, "on": local_switch_on(fresh=True), "ready": probe.ready(), "model": cfg["LOCAL_LLM_MODEL"],
+                "features": cfg["LOCAL_LLM_FEATURES"], "note": note}
+
+    def get(self, request):
+        return Response(self._state())
+
+    def post(self, request):
+        from django.core.cache import cache
+
+        from .llm.switch import set_local_switch
+
+        serializer = LocalSwitchSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        if not settings.AI["LOCAL_LLM_URL"]:
+            return Response({"detail": "No local model is set up. Add COMPOSE_PROFILES=local-llm and LOCAL_LLM_URL to .env (see the README)."},
+                            status=status.HTTP_400_BAD_REQUEST)
+        result = set_local_switch(serializer.validated_data["on"], user=request.user)
+        cache.delete("local-llm-ready")  # the status badge re-checks at once
+        return Response(self._state(result["note"]))

@@ -149,7 +149,7 @@ def test_visual_search_rejects_bad_uploads(anon_client, catalog):
 
 
 class VisionProvider(LLMProvider):
-    name, model, is_live = "fake-vision", "fake-1", True
+    name, model, is_live, supports_vision = "fake-vision", "fake-1", True, True
 
     def __init__(self):
         self.messages = None

@@ -87,6 +87,17 @@ class AddToCartInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
     product_id: int = Field(ge=1, description="Product id from search_products or get_product_details results.")
     quantity: int = Field(default=1, ge=1, le=10, description="How many units to add (1-10).")
+    size: str | None = Field(
+        default=None, max_length=20,
+        description="For clothing and footwear: the size exactly as listed in the product's sizes (e.g. 'UK 9', 'M', '32'). "
+                    "Leave it out to use the customer's saved size.",
+    )
+
+
+class CheckPurchaseInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    requirements: str | None = Field(default=None, max_length=300, description="What the customer needs the items for, in their words, if they said.")
+    product_id: int | None = Field(default=None, ge=1, description="Check one product before adding it; leave out to check the whole cart.")
 
 
 class NoInput(BaseModel):
@@ -140,7 +151,7 @@ def _search_products(ctx: ToolContext, inp: SearchProductsInput) -> ToolOutcome:
         payload["notes"] = notes + ["No products matched. Suggest broadening the search or removing filters."]
     return ToolOutcome(
         content=_json(payload),
-        summary=f"Found {len(results)} product(s) for “{inp.query}”",
+        summary=f"Found {len(results)} product{'' if len(results) == 1 else 's'} for “{inp.query}”",
         products=[{k: v for k, v in r.items() if k not in ("summary", "relevance")} for r in results],
     )
 
@@ -168,8 +179,10 @@ def _cart_payload(user) -> dict:
                 "product_id": item.product_id,
                 "name": item.product.name,
                 "quantity": item.quantity,
-                "unit_price": f"{item.product.price:.2f}",
+                "size": item.size or None,
+                "unit_price": f"{item.unit_price:.2f}",
                 "line_total": f"{item.line_total:.2f}",
+                **({"deal_price": f"{item.deal.deal_price:.2f}", "list_price": f"{item.product.price:.2f}"} if item.deal else {}),
             }
             for item in items
         ],
@@ -178,19 +191,65 @@ def _cart_payload(user) -> dict:
     }
 
 
+def _heads_up(user, product) -> str | None:
+    """A one-line warning if the customer already owns this product or one that does the same job."""
+    from ..purchase_check import Facts, owned_items, relation
+
+    facts = Facts.of(product)
+    for owned in owned_items(user):
+        rel = relation(facts, owned.facts)
+        if rel == "same_product" or (rel == "same_kind" and not facts.kind.multiples_ok):
+            state = "on the way" if owned.on_the_way else f"bought on {owned.since:%d %b %Y}"
+            return f"The customer already has {owned.facts.name} (order #{owned.order_id}, {state})."
+    return None
+
+
 def _add_to_cart(ctx: ToolContext, inp: AddToCartInput) -> ToolOutcome:
     try:
-        item = services.add_to_cart(ctx.user, inp.product_id, inp.quantity)
+        item = services.add_to_cart(ctx.user, inp.product_id, inp.quantity, size=inp.size)
     except services.CartError as exc:
         return ToolOutcome(content=_json({"error": str(exc)}), is_error=True, summary=str(exc))
     product = annotated_products().get(pk=item.product_id)
-    payload = {"added": {"product_id": product.pk, "name": product.name, "quantity_added": inp.quantity}, "cart": _cart_payload(ctx.user)}
+    added = {"product_id": product.pk, "name": product.name, "quantity_added": inp.quantity}
+    sizes = (product.attributes or {}).get("sizes")
+    if sizes:
+        added["size"] = item.size or None
+        if not item.size:
+            added["size_note"] = f"No size chosen yet. Ask which size they want: {sizes}."
+    payload = {"added": added, "cart": _cart_payload(ctx.user)}
+    if heads_up := _heads_up(ctx.user, product):
+        payload["heads_up"] = heads_up
     return ToolOutcome(
         content=_json(payload),
         summary=f"Added {inp.quantity} × {product.name} to cart",
         products=[product_card(product)],
         cart_updated=True,
     )
+
+
+def _check_purchase(ctx: ToolContext, inp: CheckPurchaseInput) -> ToolOutcome:
+    from ..purchase_check import purchase_check
+
+    product = None
+    if inp.product_id:
+        product = annotated_products().filter(pk=inp.product_id, is_active=True).first()
+        if product is None:
+            return ToolOutcome(content=_json({"error": f"No product with id {inp.product_id}."}), is_error=True, summary="Product not found")
+    try:
+        report = purchase_check(ctx.user, product=product, requirements=inp.requirements or "")
+    except ValueError as exc:
+        return ToolOutcome(content=_json({"error": str(exc)}), is_error=True, summary=str(exc))
+    payload = {
+        "verdict": report["verdict"],
+        "requirements": [r["label"] for r in report["requirements"]],
+        "checks": [
+            {"check": c["title"], "status": c["status"], "summary": c["summary"],
+             "findings": [{"product": f["product"], "severity": f["severity"], "message": f["message"]}
+                          for f in c["findings"] if f["severity"] != "pass"][:5]}
+            for c in report["checks"]
+        ],
+    }
+    return ToolOutcome(content=_json(payload), summary=f"Checked {'that product' if product else 'your cart'}: {report['verdict']['headline']}")
 
 
 def _view_cart(ctx: ToolContext, inp: NoInput) -> ToolOutcome:
@@ -261,7 +320,12 @@ TOOLS: dict[str, Tool] = {
         Tool("add_to_cart",
              "Add a product to the signed-in customer's cart. Only call this when the customer explicitly asks to add or buy something.",
              AddToCartInput, _add_to_cart),
-        Tool("view_cart", "Show the signed-in customer's cart: items, quantities and total.", NoInput, _view_cart),
+        Tool("view_cart", "Show the signed-in customer's cart: items, quantities, sizes and total.", NoInput, _view_cart),
+        Tool("check_purchase",
+             "Run the pre-purchase check on the cart (or one product): sizes vs the customer's saved sizes, compatibility "
+             "with their setup, whether it meets their needs, things they already own, and better alternatives. Use it before "
+             "checkout, or when the customer asks whether they need something or already have it.",
+             CheckPurchaseInput, _check_purchase),
         Tool("list_my_orders", "List the signed-in customer's most recent orders with status and totals.", ListOrdersInput, _list_my_orders),
         Tool("get_order_status", "Get the status and tracking history of one of the signed-in customer's orders.", OrderIdInput, _get_order_status),
         Tool("search_store_policies",

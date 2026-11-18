@@ -1,0 +1,35 @@
+{"id": "dup-same-flask", "product": "thermosteel-insulated-flask-1l", "owned": [{"slug": "thermosteel-insulated-flask-1l", "days_ago": 30}], "expect": {"duplicates": "warn", "verdict": "review"}}
+{"id": "dup-bottle-vs-flask", "product": "hydro-steel-water-bottle-750ml", "owned": [{"slug": "thermosteel-insulated-flask-1l", "days_ago": 30}], "expect": {"duplicates": "info"}}
+{"id": "dup-flask-replacement", "product": "thermosteel-insulated-flask-1l", "owned": [{"slug": "thermosteel-insulated-flask-1l", "days_ago": 2000}], "expect": {"duplicates": "info"}}
+{"id": "dup-shoes-on-the-way", "product": "stride-aqua-waterproof-running-shoes", "size": "UK 9", "profile": {"shoe_uk": 9}, "owned": [{"slug": "stride-runner-road-running-shoes", "status": "SHIPPED", "days_ago": 3}], "expect": {"duplicates": "warn", "sizes": "pass"}}
+{"id": "dup-old-running-shoes", "product": "stride-runner-road-running-shoes", "size": "UK 9", "profile": {"shoe_uk": 9}, "owned": [{"slug": "stride-runner-road-running-shoes", "days_ago": 400}], "expect": {"duplicates": "info", "sizes": "pass"}}
+{"id": "dup-socks-again", "product": "merino-wool-socks-pack-of-3", "size": "UK 7-11", "profile": {"shoe_uk": 9}, "owned": [{"slug": "merino-wool-socks-pack-of-3", "days_ago": 20}], "expect": {"duplicates": "info", "sizes": "pass"}}
+{"id": "dup-tees", "product": "drymax-sports-t-shirt", "size": "M", "profile": {"top": "M"}, "owned": [{"slug": "organic-cotton-crew-neck-tee", "days_ago": 20}], "expect": {"duplicates": "info", "sizes": "pass"}}
+{"id": "dup-earbuds-vs-headphones", "product": "pulse-true-wireless-earbuds", "owned": [{"slug": "aurora-anc-wireless-headphones", "days_ago": 100}], "expect": {"duplicates": "info"}}
+{"id": "dup-unrelated", "product": "adjustable-dumbbell-set-20kg", "owned": [{"slug": "grippro-anti-slip-yoga-mat", "days_ago": 30}], "expect": {"duplicates": "skip"}}
+{"id": "cart-two-running-shoes", "cart": [{"slug": "stride-runner-road-running-shoes", "size": "UK 9"}, {"slug": "stride-aqua-waterproof-running-shoes", "size": "UK 9"}], "profile": {"shoe_uk": 9}, "expect": {"duplicates": "warn", "sizes": "pass"}}
+{"id": "cart-flask-and-bottle", "cart": [{"slug": "thermosteel-insulated-flask-1l"}, {"slug": "hydro-steel-water-bottle-750ml"}], "expect": {"duplicates": "info"}}
+{"id": "dup-same-book", "product": "the-python-pathway", "owned": [{"slug": "the-python-pathway", "days_ago": 50}], "expect": {"duplicates": "warn", "alternatives": "skip"}}
+{"id": "dup-different-book", "product": "machine-learning-made-practical", "owned": [{"slug": "the-python-pathway", "days_ago": 50}], "expect": {"duplicates": "skip", "alternatives": "skip"}}
+{"id": "size-mismatch", "product": "stride-runner-road-running-shoes", "size": "UK 8", "profile": {"shoe_uk": 9}, "expect": {"sizes": "warn"}}
+{"id": "size-match", "product": "classic-leather-oxford-shoes", "size": "UK 9", "profile": {"shoe_uk": 9}, "expect": {"sizes": "pass"}}
+{"id": "size-not-made", "product": "classic-leather-oxford-shoes", "profile": {"shoe_uk": 11}, "expect": {"sizes": "fail", "verdict": "stop"}}
+{"id": "size-not-chosen", "product": "windproof-puffer-jacket", "profile": {"top": "M"}, "expect": {"sizes": "warn"}}
+{"id": "size-stated-wins", "product": "fleece-zip-hoodie", "size": "M", "requirements": "I wear size L", "expect": {"sizes": "warn"}}
+{"id": "size-waist", "product": "flexfit-slim-jeans", "size": "32", "profile": {"waist": 32}, "expect": {"sizes": "pass"}}
+{"id": "size-kids", "product": "kids-light-up-sneakers", "size": "Age 5-6", "expect": {"sizes": "info"}}
+{"id": "req-waterproof-runner", "product": "stride-runner-road-running-shoes", "size": "UK 9", "profile": {"shoe_uk": 9}, "requirements": "waterproof running shoes under 5000", "expect": {"requirements": "warn", "alternatives": "warn", "alternative": "stride-aqua-waterproof-running-shoes", "results": {"Waterproof": "not_met", "Made for running": "met"}}}
+{"id": "req-anc-earbuds", "product": "pulse-true-wireless-earbuds", "requirements": "noise cancelling for long flights", "expect": {"requirements": "warn", "alternatives": "warn", "alternative": "aurora-anc-wireless-headphones", "results": {"Noise cancelling": "not_met"}}}
+{"id": "req-warm-rain-jacket", "product": "packable-rain-jacket", "size": "M", "profile": {"top": "M"}, "requirements": "a warm jacket for a Manali winter", "expect": {"requirements": "warn", "alternatives": "skip", "results": {"Keeps you warm": "not_met"}}}
+{"id": "req-quickdry-tee", "product": "organic-cotton-crew-neck-tee", "size": "M", "profile": {"top": "M"}, "requirements": "quick-dry tee for sweaty gym sessions", "expect": {"requirements": "warn", "alternatives": "warn", "alternative": "drymax-sports-t-shirt", "results": {"Quick-dry, breathable": "not_met"}}}
+{"id": "req-budget-headphones", "product": "aurora-anc-wireless-headphones", "requirements": "headphones under 1000", "expect": {"requirements": "warn", "alternatives": "skip"}}
+{"id": "req-light-runner", "product": "stride-runner-road-running-shoes", "size": "UK 9", "profile": {"shoe_uk": 9}, "requirements": "lightweight running shoes", "expect": {"requirements": "pass", "alternatives": "skip", "verdict": "ready", "results": {"Lightweight": "met", "Made for running": "met"}}}
+{"id": "req-standing-rain", "product": "stride-runner-road-running-shoes", "size": "UK 9", "profile": {"shoe_uk": 9, "needs": "I run outdoors most mornings, often in the rain."}, "expect": {"requirements": "info", "alternatives": "info", "alternative": "stride-aqua-waterproof-running-shoes"}}
+{"id": "req-tennis-ball-bat", "product": "english-willow-cricket-bat", "requirements": "a bat for tennis-ball cricket with friends", "expect": {"requirements": "warn", "compatibility": "warn", "alternatives": "warn", "alternative": "kashmir-willow-tennis-ball-bat", "results": {"For tennis-ball cricket": "not_met"}}}
+{"id": "compat-monitor-usb-c", "product": "lumen-24-inch-ips-monitor", "profile": {"needs": "My laptop only has USB-C ports."}, "expect": {"compatibility": "warn"}}
+{"id": "compat-monitor-hdmi", "product": "lumen-24-inch-ips-monitor", "profile": {"needs": "My laptop has an HDMI port."}, "expect": {"compatibility": "pass"}}
+{"id": "compat-football-kid", "product": "prokick-football-size-5", "requirements": "a football for my 8 year old", "expect": {"compatibility": "warn"}}
+{"id": "compat-pan-induction", "product": "ceramic-non-stick-frying-pan", "profile": {"needs": "I cook on an induction stove."}, "expect": {"compatibility": "pass"}}
+{"id": "compat-webcam-monitor", "product": "clearview-1080p-webcam", "owned": [{"slug": "lumen-24-inch-ips-monitor", "days_ago": 200}], "expect": {"compatibility": "pass", "duplicates": "skip"}}
+{"id": "compat-mouse-usb-c", "product": "glide-silent-wireless-mouse", "profile": {"needs": "My laptop only has USB-C ports."}, "expect": {"compatibility": "warn"}}
+{"id": "ready-yoga-mat", "product": "grippro-anti-slip-yoga-mat", "expect": {"verdict": "ready", "duplicates": "skip", "sizes": "skip"}}

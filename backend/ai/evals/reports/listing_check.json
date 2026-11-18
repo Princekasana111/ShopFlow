@@ -1,0 +1,143 @@
+{
+  "suite": "listing_check",
+  "config": {
+    "llm_provider": "offline",
+    "llm_model": "rule-based-v1",
+    "embedding_model": "BAAI/bge-small-en-v1.5",
+    "query_prefix": "",
+    "cases": 13
+  },
+  "metrics": {
+    "verdict_accuracy": 1.0,
+    "no_false_claims": 1.0,
+    "flag_precision": 1.0,
+    "flag_recall": 1.0,
+    "quotes_grounded": 1.0
+  },
+  "details": [
+    {
+      "id": "rain-shoes-leak",
+      "expected": {
+        "waterproof": "contradicted"
+      },
+      "got": {
+        "waterproof": "contradicted"
+      },
+      "provider": "offline"
+    },
+    {
+      "id": "speaker-pool",
+      "expected": {
+        "waterproof": "supported",
+        "battery": "supported"
+      },
+      "got": {
+        "waterproof": "supported",
+        "battery": "supported"
+      },
+      "provider": "offline"
+    },
+    {
+      "id": "earbuds-battery",
+      "expected": {
+        "battery": "contradicted"
+      },
+      "got": {
+        "battery": "contradicted"
+      },
+      "provider": "offline"
+    },
+    {
+      "id": "powerbank-capacity",
+      "expected": {
+        "capacity": "contradicted"
+      },
+      "got": {
+        "capacity": "contradicted"
+      },
+      "provider": "offline"
+    },
+    {
+      "id": "headphones-anc",
+      "expected": {
+        "anc": "supported"
+      },
+      "got": {
+        "anc": "supported"
+      },
+      "provider": "offline"
+    },
+    {
+      "id": "pan-disputed",
+      "expected": {
+        "nonstick": "disputed"
+      },
+      "got": {
+        "nonstick": "disputed"
+      },
+      "provider": "offline"
+    },
+    {
+      "id": "flask-hot",
+      "expected": {
+        "insulation": "supported"
+      },
+      "got": {
+        "insulation": "supported"
+      },
+      "provider": "offline"
+    },
+    {
+      "id": "mat-slippery",
+      "expected": {
+        "grip": "contradicted"
+      },
+      "got": {
+        "grip": "contradicted"
+      },
+      "provider": "offline"
+    },
+    {
+      "id": "durable-sole",
+      "expected": {
+        "durability": "disputed"
+      },
+      "got": {
+        "durability": "disputed"
+      },
+      "provider": "offline"
+    },
+    {
+      "id": "no-claim-no-flag",
+      "expected": {},
+      "got": {},
+      "provider": "offline"
+    },
+    {
+      "id": "negated-claim",
+      "expected": {
+        "waterproof": "disputed"
+      },
+      "got": {
+        "waterproof": "disputed"
+      },
+      "provider": "offline"
+    },
+    {
+      "id": "off-topic-reviews",
+      "expected": {},
+      "got": {},
+      "provider": "offline"
+    },
+    {
+      "id": "one-complaint-many-fans",
+      "expected": {
+        "waterproof": "disputed"
+      },
+      "got": {
+        "waterproof": "disputed"
+      },
+      "provider": "offline"
+    }
+  ]
+}

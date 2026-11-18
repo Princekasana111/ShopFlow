@@ -17,7 +17,8 @@ def _lookup(report: dict, path: str):
 
 
 class Command(BaseCommand):
-    help = "Run evaluation suites (search, parse, rag, agent, planner, product_qa, visual) and save reports."
+    help = ("Run evaluation suites (search, parse, rag, agent, planner, product_qa, visual, purchase_check, negotiation, "
+            "listing_check, fit, search_explain) and save reports.")
 
     def add_arguments(self, parser):
         parser.add_argument("--suite", default="all", choices=["all", *SUITES])

@@ -2,7 +2,7 @@ from django.contrib import admin, messages
 
 from . import services
 
-from .models import Cart, CartItem, Category, Order, OrderItem, OrderStatusEvent, Product, Review
+from .models import Cart, CartItem, Category, Offer, Order, OrderItem, OrderStatusEvent, Product, Review
 
 
 @admin.register(Category)
@@ -13,18 +13,31 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ["name", "category", "brand", "price", "stock", "is_active"]
+    list_display = ["name", "category", "brand", "price", "floor_price", "stock", "is_active"]
     list_filter = ["category", "is_active"]
-    list_editable = ["price", "stock", "is_active"]
+    list_editable = ["price", "floor_price", "stock", "is_active"]
     search_fields = ["name", "brand", "description"]
     prepopulated_fields = {"slug": ["name"]}
 
 
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
-    list_display = ["product", "user", "rating", "is_flagged", "created_at"]
-    list_filter = ["is_flagged", "rating"]
+    list_display = ["product", "user", "rating", "size_bought", "fit", "is_flagged", "created_at"]
+    list_filter = ["is_flagged", "rating", "fit"]
     search_fields = ["body", "title"]
+
+
+@admin.register(Offer)
+class OfferAdmin(admin.ModelAdmin):
+    """"Make an offer" chats: read-only, for checking what the AI seller agreed to."""
+
+    list_display = ["id", "product", "user", "status", "list_price", "deal_price", "turns", "created_at"]
+    list_filter = ["status"]
+    search_fields = ["product__name", "user__username"]
+    readonly_fields = [f.name for f in Offer._meta.fields] + ["messages"]
+
+    def has_add_permission(self, request):
+        return False
 
 
 class CartItemInline(admin.TabularInline):
